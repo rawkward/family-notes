@@ -30,12 +30,20 @@ h3{font-size:1.05rem;margin:0 0 6px}
 .small{font-size:.83rem}
 .eyebrow{font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
 
-.topbar{position:sticky;top:0;z-index:1100;background:rgba(250,246,239,.92);backdrop-filter:saturate(1.2) blur(8px);border-bottom:1px solid var(--line);padding:10px 20px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.topbar{position:sticky;top:0;z-index:1100;background:rgba(250,246,239,.92);backdrop-filter:saturate(1.2) blur(8px);border-bottom:1px solid var(--line);padding:10px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .brand{font-family:var(--serif);font-weight:700;font-size:1.05rem;white-space:nowrap}
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
 .tab{border:1px solid var(--line);background:var(--card);color:var(--muted);border-radius:999px;padding:7px 15px;font:inherit;font-size:.87rem;font-weight:600;cursor:pointer;transition:.15s}
 .tab:hover{color:var(--ink);border-color:#d6c9b6}
 .tab.on{background:var(--ink);border-color:var(--ink);color:#fff}
+
+.sync{display:inline-flex;align-items:center;gap:7px;font-size:.74rem;font-weight:600;color:var(--muted);background:var(--bg2);border:1px solid var(--line);border-radius:999px;padding:5px 11px;white-space:nowrap}
+.sync i{width:7px;height:7px;border-radius:50%;background:#a8a29e;transition:.2s}
+.sync.ok{color:var(--ok);background:var(--ok-soft);border-color:#dbe8c8}
+.sync.ok i{background:var(--ok)}
+.sync.busy i{background:var(--warn)}
+.sync.off{color:var(--bad);background:var(--bad-soft);border-color:#f2cdd6}
+.sync.off i{background:var(--bad)}
 
 .wrap{max-width:1060px;margin:0 auto;padding:0 20px}
 .hero{padding:40px 0 22px}
@@ -47,29 +55,49 @@ section.view{display:none;padding-bottom:70px}
 section.view.on{display:block}
 
 /* progress */
-.progress-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin:6px 0 26px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.progress-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin:6px 0 26px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .progress-card .num{font-family:var(--serif);font-size:1.9rem;font-weight:700;line-height:1}
-.bar{flex:1;min-width:180px;height:10px;background:var(--bg2);border-radius:999px;overflow:hidden}
+.bar{flex:1;min-width:160px;height:10px;background:var(--bg2);border-radius:999px;overflow:hidden}
 .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#65a30d,#4d7c0f);border-radius:999px;transition:width .35s}
 .ghost{background:none;border:1px solid var(--line);border-radius:999px;padding:7px 14px;font:inherit;font-size:.83rem;font-weight:600;color:var(--muted);cursor:pointer}
 .ghost:hover{color:var(--ink);border-color:#d6c9b6}
+.primary{background:var(--ink);color:#fff;border:1px solid var(--ink);border-radius:9px;padding:8px 14px;font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
+.primary:hover{background:#000}
+.primary:disabled{opacity:.6;cursor:default}
+.mini{border:1px solid transparent;background:none;color:#b3a999;font:inherit;font-size:.85rem;line-height:1;padding:4px 6px;border-radius:7px;cursor:pointer}
+.mini:hover{background:var(--bg2);color:var(--ink);border-color:var(--line)}
 
 /* quest groups */
-.qgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
-.qcard{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 18px 10px}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;align-items:start}
+.qcard{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 18px 12px}
 .qcard header{display:flex;align-items:center;gap:9px;margin-bottom:12px}
 .qcard header .ic{font-size:1.05rem}
 .qcard header h3{font-size:1rem;margin:0}
 .qcard header .cnt{margin-left:auto;font-size:.74rem;color:var(--muted);font-weight:600;background:var(--bg2);border-radius:999px;padding:2px 9px}
-.qitem{display:flex;gap:11px;align-items:flex-start;padding:8px 0;border-top:1px solid #f0e9dd;cursor:pointer}
+.qcard header .rowact{opacity:.5}
+.qitem{display:flex;gap:11px;align-items:flex-start;padding:8px 0;border-top:1px solid #f0e9dd}
 .qitem:first-of-type{border-top:0}
-.qitem input{appearance:none;width:19px;height:19px;flex:0 0 19px;margin:2px 0 0;border:1.5px solid #cfc3b1;border-radius:6px;background:#fff;cursor:pointer;transition:.15s;position:relative}
-.qitem input:checked{background:var(--ok);border-color:var(--ok)}
-.qitem input:checked::after{content:"";position:absolute;left:6px;top:2px;width:4px;height:10px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
-.qitem .txt{font-size:.94rem}
+.qitem input[type=checkbox]{appearance:none;width:19px;height:19px;flex:0 0 19px;margin:2px 0 0;border:1.5px solid #cfc3b1;border-radius:6px;background:#fff;cursor:pointer;transition:.15s;position:relative}
+.qitem input[type=checkbox]:checked{background:var(--ok);border-color:var(--ok)}
+.qitem input[type=checkbox]:checked::after{content:"";position:absolute;left:6px;top:2px;width:4px;height:10px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.qitem .txt{font-size:.94rem;flex:1;cursor:pointer}
 .qitem .txt small{display:block;color:var(--muted);font-size:.79rem;margin-top:1px}
 .qitem.done .txt{color:#a79e92;text-decoration:line-through}
 .qitem.done .txt small{text-decoration:none}
+.rowact{display:flex;gap:2px;margin-left:auto;opacity:.45;transition:.15s}
+.qitem:hover .rowact,.qitem:focus-within .rowact,.date:hover .rowact,.reg .r:hover .rowact{opacity:1}
+@media (hover:none){.rowact{opacity:.85}}
+
+/* inline forms */
+.inline{display:grid;gap:8px;padding:12px 0;border-top:1px solid #f0e9dd}
+.qgrid > .inline{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+.field{display:grid;gap:3px}
+.field > span{font-size:.74rem;font-weight:600;color:var(--muted)}
+.inline input,.inline select,.inline textarea{border:1px solid var(--line);border-radius:9px;padding:8px 10px;font:inherit;font-size:.9rem;background:#fff;color:var(--ink);width:100%}
+.inline textarea{min-height:74px;resize:vertical}
+.formact{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+.addbtn{width:100%;margin-top:10px;background:none;border:1px dashed var(--line);border-radius:11px;padding:8px;font:inherit;font-size:.84rem;font-weight:600;color:var(--muted);cursor:pointer}
+.addbtn:hover{color:var(--accent);border-color:#e0c3b0;background:#fffaf5}
 
 /* reminder cards */
 .jobs{display:grid;gap:12px;margin-bottom:34px}
@@ -84,17 +112,20 @@ section.view.on{display:block}
 .st.paused{background:var(--warn-soft);color:var(--warn)}
 
 .dates{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-bottom:34px}
-.date{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.date{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;position:relative}
 .date .dd{font-family:var(--serif);font-size:1.6rem;font-weight:700;line-height:1}
 .date .in{margin-top:8px;font-size:.8rem;color:var(--muted)}
 .date .in b{color:var(--accent);font-weight:600}
+.date .who{display:inline-block;margin-top:7px;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#94340a;background:var(--accent-soft);border-radius:999px;padding:2px 8px}
+.date .rowact{position:absolute;top:8px;right:8px}
 
 .reg{display:grid;gap:12px}
-.reg .r{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
-.reg .r h4{margin:0 0 4px;font-family:var(--serif);font-size:1.02rem}
+.reg .r{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;position:relative}
+.reg .r h4{margin:0 0 4px;font-family:var(--serif);font-size:1.02rem;padding-right:52px}
 .reg .r .when{font-size:.86rem;font-weight:600;color:var(--accent)}
 .reg .r p{margin:6px 0 0;font-size:.87rem;color:var(--muted)}
 .reg .r .buy{display:inline-block;margin-top:8px;font-size:.76rem;font-weight:600;background:var(--bg2);border-radius:999px;padding:3px 10px;color:var(--ink)}
+.reg .r .rowact{position:absolute;top:12px;right:12px}
 
 /* driving */
 .intro-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin-bottom:22px}
@@ -103,9 +134,10 @@ section.view.on{display:block}
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .chip{background:var(--accent-soft);color:#94340a;border-radius:999px;padding:4px 12px;font-size:.78rem;font-weight:600}
 
-.blocktl{display:flex;align-items:baseline;gap:10px;margin:34px 0 12px}
+.blocktl{display:flex;align-items:baseline;gap:10px;margin:34px 0 12px;flex-wrap:wrap}
 .blocktl h2{font-size:1.35rem;margin:0}
 .blocktl .n{font-size:.76rem;color:var(--muted);font-weight:600}
+.blocktl .ghost{margin-left:auto}
 
 .school{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:12px}
 .school.best{border-left-color:var(--ok)}
@@ -115,8 +147,9 @@ section.view.on{display:block}
 .school .top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
 .school .top h3{font-size:1.08rem;margin:0}
 .school .top .price{margin-left:auto;font-weight:700;font-size:.92rem}
-.school .addr{font-size:.82rem;color:var(--muted);margin:2px 0 10px}
+.school .addr{font-size:.82rem;color:var(--muted);margin:2px 0 8px}
 .school .addr a{color:var(--muted);text-decoration:underline dotted}
+.school .links{display:flex;gap:12px;flex-wrap:wrap;font-size:.83rem;font-weight:600;margin:0 0 10px}
 .school ul{margin:0 0 10px;padding-left:17px}
 .school li{font-size:.86rem;margin:3px 0}
 .school .verdict{font-size:.86rem;border-top:1px solid #f0e9dd;padding-top:9px;margin:0;color:#3f3a34}
@@ -142,6 +175,19 @@ section.view.on{display:block}
 footer{border-top:1px solid var(--line);margin-top:30px;padding:22px 0 40px;color:var(--muted);font-size:.8rem}
 footer .wrap{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 
+/* lock */
+.lock{position:fixed;inset:0;background:rgba(28,25,23,.5);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:20px;z-index:2500}
+.lock.on{display:flex}
+.lockcard{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:24px;max-width:360px;width:100%;box-shadow:0 24px 60px rgba(28,25,23,.22)}
+.lockcard h3{margin:0 0 6px}
+.lockcard p{margin:0 0 14px;font-size:.85rem;color:var(--muted)}
+.lockcard input{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit;background:#fff;margin-bottom:10px}
+.lockcard .primary{width:100%}
+.lockcard .err{margin:10px 0 0;font-size:.82rem;color:var(--bad);min-height:18px}
+
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(16px);background:var(--ink);color:#fff;font-size:.85rem;padding:10px 18px;border-radius:999px;opacity:0;transition:.2s;pointer-events:none;z-index:3000;max-width:calc(100% - 32px);text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
 @media (max-width:620px){
   .hero{padding:26px 0 14px}
   .job{flex-direction:column;gap:6px}
@@ -154,6 +200,7 @@ footer .wrap{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 
 <div class="topbar">
   <div class="brand">Наши заметки ★</div>
+  <span class="sync" id="sync"><i></i><span id="sync-txt">подключаюсь…</span></span>
   <nav class="tabs">
     <button class="tab on" data-view="quests">Квесты</button>
     <button class="tab" data-view="reminders">Напоминания</button>
@@ -167,7 +214,7 @@ footer .wrap{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     <div class="hero">
       <div class="eyebrow">Общий список дел</div>
       <h1>Квесты</h1>
-      <p>Наш список покупок, ремонта, кошки кисы и рутины. Отметки сохраняются в этом браузере — на телефоне и на компьютере они независимы. Источник — <span class="kbd">quests.md</span>, от 29.10.2026.</p>
+      <p>Покупки, ремонт, кошка Киса и рутина. Список общий: что отметили или дописали здесь — сразу видно на телефоне и на компьютере.</p>
     </div>
 
     <div class="progress-card">
@@ -175,6 +222,7 @@ footer .wrap{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
       <div class="small muted" id="done-of">из 0 сделано</div>
       <div class="bar"><i id="bar"></i></div>
       <button class="ghost" id="show-rest">Только невыполненное</button>
+      <button class="ghost" id="add-group">＋ Группа</button>
       <button class="ghost" id="reset">Сбросить отметки</button>
     </div>
 
@@ -188,16 +236,16 @@ footer .wrap{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     <div class="hero">
       <div class="eyebrow">Что и когда</div>
       <h1>Напоминания</h1>
-      <p>Две части: то, что бот сам пишет в чат «Людское», и то, что мы держим в голове — даты и регулярные дела.</p>
+      <p>Две части: то, что бот сам пишет в чат «Людское», и то, что мы держим в голове — даты и регулярные дела. Даты и дела правятся отсюда, правки общие для всех устройств.</p>
     </div>
 
-    <div class="blocktl"><h2>Бот присылает сам</h2><span class="n">4 задачи, токены не тратятся</span></div>
+    <div class="blocktl"><h2>Бот присылает сам</h2><span class="n">4 задачи · живут в Hermes, здесь только показаны</span></div>
     <div class="jobs" id="jobs"></div>
 
-    <div class="blocktl"><h2>Даты</h2><span class="n">повторяются каждый год</span></div>
+    <div class="blocktl"><h2>Даты</h2><span class="n">повторяются каждый год</span><button class="ghost" id="add-date">＋ Дата</button></div>
     <div class="dates" id="dates"></div>
 
-    <div class="blocktl"><h2>Регулярные дела</h2><span class="n">привязка к числу месяца</span></div>
+    <div class="blocktl"><h2>Регулярные дела</h2><span class="n">привязка к числу месяца</span><button class="ghost" id="add-regular">＋ Дело</button></div>
     <div class="reg" id="regular"></div>
   </div>
 </section>
@@ -208,7 +256,7 @@ footer .wrap{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     <div class="hero">
       <div class="eyebrow">Воронеж · ноябрь 2026</div>
       <h1>Автошкола: курсы, школы, частники</h1>
-      <p>Всё, что мы выяснили про возвращение за руль. Цены — по прайсам ноября 2026, перед записью подтверждать по телефону.</p>
+      <p>Всё, что мы выяснили про возвращение за руль. Цены — по прайсам ноября 2026; сайты и телефоны сверены 05.11.2026, перед записью подтверждать звонком.</p>
     </div>
 
     <div class="intro-card" id="drive-intro"></div>
@@ -216,7 +264,7 @@ footer .wrap{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     <div class="blocktl"><h2>Сначала — права, это отдельная покупка</h2></div>
     <div class="panel" id="license"></div>
 
-    <div class="blocktl"><h2>Школы рядом с домом</h2><span class="n">от ближней к дальней</span></div>
+    <div class="blocktl"><h2>Школы рядом с домом</h2><span class="n">от ближней к дальней · телефон, сайт, карта</span></div>
     <div id="schools"></div>
 
     <div class="blocktl"><h2>Сколько выходит «Форсаж» на автомате</h2><span class="n">теория 15 990 ₽ + 700 ₽/час</span></div>
@@ -264,184 +312,717 @@ footer .wrap{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
   </div>
 </footer>
 
+<div class="lock" id="lock">
+  <form class="lockcard" id="lock-form">
+    <h3>Семейный пароль</h3>
+    <p>Один раз на устройстве — дальше сайт помнит сам.</p>
+    <input type="password" id="lock-pass" autocomplete="current-password" placeholder="пароль">
+    <button class="primary" type="submit">Войти</button>
+    <p class="err" id="lock-err"></p>
+  </form>
+</div>
+
+<div class="toast" id="toast"></div>
+
 <script src="assets/notes.js"></script>
+<script src="assets/api.js"></script>
 <script>
 /* ───────── тэбы ───────── */
-const views = ["quests","reminders","driving"];
-function show(v){
-  if(!views.includes(v)) v = "quests";
-  document.querySelectorAll(".view").forEach(s => s.classList.toggle("on", s.id === "v-"+v));
-  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("on", b.dataset.view === v));
-  if (history.replaceState) history.replaceState(null,"","#"+v);
-  try { window.scrollTo({top:0, behavior:"instant"}); } catch (e) {}
+const views = ["quests", "reminders", "driving"];
+function show(v) {
+  if (!views.includes(v)) v = "quests";
+  document.querySelectorAll(".view").forEach((s) => s.classList.toggle("on", s.id === "v-" + v));
+  document.querySelectorAll(".tab").forEach((b) => b.classList.toggle("on", b.dataset.view === v));
+  if (history.replaceState) history.replaceState(null, "", "#" + v);
+  try { window.scrollTo({ top: 0, behavior: "instant" }); } catch (e) {}
 }
-document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => show(b.dataset.view)));
-show((location.hash||"").replace("#",""));
+document.querySelectorAll(".tab").forEach((b) => b.addEventListener("click", () => show(b.dataset.view)));
+show((location.hash || "").replace("#", ""));
 
-/* ───────── квесты ───────── */
-const STORE = "family-notes-quests-v1";
-const state = JSON.parse(localStorage.getItem(STORE) || "{}");
-const qwrap = document.getElementById("quests");
-const showRestBtn = document.getElementById("show-rest");
+/* ───────── помощники ───────── */
+const $ = (sel) => document.querySelector(sel);
+const TOKEN_KEY = "family-notes-token-v1";
+const CACHE_KEY = "family-notes-state-v1";
+const OLD_KEY = "family-notes-quests-v1";
+
+function node(tag, cls, text) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined) n.textContent = text;
+  return n;
+}
+function iconBtn(label, title, onClick) {
+  const b = node("button", "mini", label);
+  b.type = "button";
+  b.title = title;
+  b.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); onClick(); });
+  return b;
+}
+let toastTimer = null;
+function toast(message) {
+  const el = $("#toast");
+  el.textContent = message;
+  el.classList.add("on");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("on"), 2600);
+}
+
+/* ───────── состояние и синхронизация ───────── */
+const syncEl = $("#sync");
+const syncTxt = $("#sync-txt");
+function setSync(kind, text) {
+  syncEl.className = "sync " + kind;
+  syncTxt.textContent = text;
+  syncEl.title = kind === "ok" ? "Правки общие для всех устройств" : text;
+}
+
+let store = { quests: [], dates: [], regular: [] };
+let rev = -1;
+let token = localStorage.getItem(TOKEN_KEY) || "";
+let openForms = 0;
 let onlyRest = false;
+let busy = false;
 
-QUESTS.forEach(g => {
-  const card = document.createElement("div");
-  card.className = "qcard";
-  const head = document.createElement("header");
-  head.innerHTML = `<span class="ic">${g.icon}</span><h3>${g.title}</h3><span class="cnt" data-cnt="${g.id}"></span>`;
+function cacheSave() {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify({ rev, data: store })); } catch (e) {}
+}
+function cacheLoad() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
+    if (raw && raw.data) {
+      store = raw.data;
+      rev = typeof raw.rev === "number" ? raw.rev : -1;
+      return true;
+    }
+  } catch (e) {}
+  return false;
+}
+
+function seedState() {
+  let legacy = {};
+  try { legacy = JSON.parse(localStorage.getItem(OLD_KEY) || "{}"); } catch (e) {}
+  return {
+    quests: QUESTS.map((g) => ({
+      id: g.id,
+      title: g.title,
+      icon: g.icon,
+      items: g.items.map((it, i) => ({ id: g.id + "-" + i, t: it.t, n: it.n || "", done: legacy[g.id + ":" + i] === true })),
+    })),
+    dates: DATES.map((d, i) => ({ id: "date-" + i, m: d.m, day: d.day, title: d.title, who: d.who || "" })),
+    regular: REGULAR.map((r, i) => ({ id: "reg-" + i, title: r.title, when: r.when || "", note: r.note || "", buy: r.buy || "" })),
+  };
+}
+
+function applyRemote(payload) {
+  if (!payload || !payload.data) return false;
+  store = payload.data;
+  rev = payload.rev;
+  cacheSave();
+  renderAll();
+  return true;
+}
+
+function handleApiError(err, quiet) {
+  const status = err && err.status;
+  if (status === 401) {
+    token = "";
+    localStorage.removeItem(TOKEN_KEY);
+    setSync("off", "нужен пароль");
+    openLock("Пароль не подошёл или сессия истекла — введите заново.");
+    return false;
+  }
+  if (status === 409) {
+    refresh({ quiet: true });
+    return false;
+  }
+  setSync("off", "нет связи");
+  if (!quiet) toast("Не сохранилось: нет связи с сервером");
+  return false;
+}
+
+async function refresh(opts) {
+  if (!token) return false;
+  const quiet = opts && opts.quiet;
+  if (!quiet) setSync("busy", "загружаю…");
+  try {
+    const res = await NotesApi.getState(token);
+    if (res.data === null) {
+      const created = await NotesApi.init(token, seedState());
+      applyRemote(created);
+    } else {
+      applyRemote(res);
+    }
+    setSync("ok", "общее");
+    return true;
+  } catch (err) {
+    return handleApiError(err, quiet);
+  }
+}
+
+async function sendOps(ops) {
+  if (!token) { openLock(); return false; }
+  if (busy) return false;
+  busy = true;
+  setSync("busy", "сохраняю…");
+  try {
+    const res = await NotesApi.sendOps(token, ops);
+    applyRemote(res);
+    setSync("ok", "общее");
+    return true;
+  } catch (err) {
+    return handleApiError(err);
+  } finally {
+    busy = false;
+  }
+}
+
+/* ───────── рендер: квесты ───────── */
+function renderQuests() {
+  const grid = $("#quests");
+  grid.textContent = "";
+  store.quests.forEach((group) => grid.appendChild(questCard(group)));
+  paint();
+}
+
+function questCard(group) {
+  const card = node("div", "qcard");
+  card.dataset.group = group.id;
+
+  const head = node("header");
+  head.appendChild(node("span", "ic", group.icon));
+  head.appendChild(node("h3", "", group.title));
+  const cnt = node("span", "cnt");
+  cnt.dataset.cnt = group.id;
+  head.appendChild(cnt);
+  const act = node("span", "rowact");
+  act.appendChild(iconBtn("✎", "Переименовать группу", () => openGroupForm(group)));
+  act.appendChild(iconBtn("✕", "Удалить группу", () => {
+    if (!confirm("Удалить группу «" + group.title + "» со всеми пунктами?")) return;
+    sendOps([{ type: "group.del", id: group.id }]);
+  }));
+  head.appendChild(act);
   card.appendChild(head);
 
-  g.items.forEach((it,i) => {
-    const key = g.id+":"+i;
-    const lab = document.createElement("label");
-    lab.className = "qitem";
-    lab.dataset.key = key;
-    lab.innerHTML = `<input type="checkbox" ${state[key]?"checked":""}><span class="txt">${it.t}${it.n?`<small>${it.n}</small>`:""}</span>`;
-    const cb = lab.querySelector("input");
-    cb.addEventListener("change", () => {
-      state[key] = cb.checked;
-      localStorage.setItem(STORE, JSON.stringify(state));
-      lab.classList.toggle("done", cb.checked);
-      paint();
-    });
-    lab.classList.toggle("done", !!state[key]);
-    card.appendChild(lab);
-  });
-  qwrap.appendChild(card);
-});
+  group.items.forEach((item) => card.appendChild(questItemRow(item)));
 
-function paint(){
-  let done = 0, total = 0;
-  QUESTS.forEach(g => {
-    let d = 0;
-    g.items.forEach((_,i) => { if(state[g.id+":"+i]) d++; });
-    total += g.items.length; done += d;
-    const cnt = document.querySelector(`[data-cnt="${g.id}"]`);
+  const add = node("button", "addbtn", "＋ пункт");
+  add.type = "button";
+  add.addEventListener("click", () => openAddItemForm(card, group, add));
+  card.appendChild(add);
+  return card;
+}
+
+function questItemRow(item) {
+  const row = node("div", "qitem" + (item.done ? " done" : ""));
+  row.dataset.id = item.id;
+
+  const cb = node("input");
+  cb.type = "checkbox";
+  cb.checked = !!item.done;
+  function toggle(next) {
+    sendOps([{ type: "quest.toggle", id: item.id, done: next }]);
+  }
+  cb.addEventListener("change", () => toggle(cb.checked));
+
+  const txt = node("span", "txt", item.t);
+  if (item.n) txt.appendChild(node("small", "", item.n));
+  txt.addEventListener("click", () => {
+    cb.checked = !cb.checked;
+    row.classList.toggle("done", cb.checked);
+    toggle(cb.checked);
+  });
+
+  const act = node("span", "rowact");
+  act.appendChild(iconBtn("✎", "Изменить пункт", () => openItemForm(item, row)));
+  act.appendChild(iconBtn("✕", "Удалить пункт", () => {
+    if (!confirm("Удалить пункт «" + item.t + "»?")) return;
+    sendOps([{ type: "quest.del", id: item.id }]);
+  }));
+
+  row.append(cb, txt, act);
+  return row;
+}
+
+function buildForm(fields, opts) {
+  const form = node("form", "inline");
+  fields.forEach((f) => {
+    const wrap = node("label", "field");
+    wrap.appendChild(node("span", "", f.label));
+    let input;
+    if (f.type === "textarea") {
+      input = node("textarea");
+    } else if (f.type === "select") {
+      input = node("select");
+      (f.options || []).forEach((o) => {
+        const opt = node("option", "", o.label);
+        opt.value = String(o.value);
+        input.appendChild(opt);
+      });
+    } else {
+      input = node("input");
+      input.type = f.type || "text";
+    }
+    input.name = f.name;
+    if (f.placeholder) input.placeholder = f.placeholder;
+    if (f.value !== undefined && f.value !== null) input.value = String(f.value);
+    if (f.min !== undefined) input.min = String(f.min);
+    if (f.max !== undefined) input.max = String(f.max);
+    if (f.maxlength) input.maxLength = f.maxlength;
+    wrap.appendChild(input);
+    form.appendChild(wrap);
+  });
+
+  const actions = node("div", "formact");
+  const ok = node("button", "primary", opts.submit || "Сохранить");
+  ok.type = "submit";
+  const cancel = node("button", "ghost", "Отмена");
+  cancel.type = "button";
+  cancel.addEventListener("click", () => opts.onCancel());
+  actions.append(ok, cancel);
+  form.appendChild(actions);
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const values = {};
+    fields.forEach((f) => {
+      const inp = form.querySelector('[name="' + f.name + '"]');
+      values[f.name] = inp ? inp.value : "";
+    });
+    opts.onSubmit(values);
+  });
+  return form;
+}
+
+function openItemForm(item, row) {
+  if (row.nextElementSibling && row.nextElementSibling.classList.contains("inline")) return;
+  row.style.display = "none";
+  openForms++;
+  const form = buildForm(
+    [
+      { name: "t", label: "Пункт", value: item.t, maxlength: 300 },
+      { name: "n", label: "Уточнение (необязательно)", value: item.n || "", maxlength: 800 },
+    ],
+    {
+      onCancel: () => { form.remove(); row.style.display = ""; openForms--; },
+      onSubmit: (v) => {
+        if (!v.t.trim()) { toast("Пустой пункт не сохраню"); return; }
+        form.remove();
+        row.style.display = "";
+        openForms--;
+        sendOps([{ type: "quest.edit", id: item.id, text: v.t, note: v.n }]);
+      },
+    },
+  );
+  row.after(form);
+  form.querySelector("input").focus();
+}
+
+function openAddItemForm(card, group, addBtn) {
+  const existing = card.querySelector(".inline");
+  if (existing) { existing.querySelector("input").focus(); return; }
+  openForms++;
+  const form = buildForm(
+    [
+      { name: "t", label: "Новый пункт", placeholder: "что сделать", maxlength: 300 },
+      { name: "n", label: "Уточнение (необязательно)", placeholder: "детали, магазин, ссылка", maxlength: 800 },
+    ],
+    {
+      submit: "Добавить",
+      onCancel: () => { form.remove(); openForms--; },
+      onSubmit: (v) => {
+        if (!v.t.trim()) { toast("Пустой пункт не сохраню"); return; }
+        form.remove();
+        openForms--;
+        sendOps([{ type: "quest.add", group: group.id, text: v.t, note: v.n }]);
+      },
+    },
+  );
+  addBtn.before(form);
+  form.querySelector("input").focus();
+}
+
+function openGroupForm(group) {
+  const grid = $("#quests");
+  const existing = grid.querySelector(":scope > .inline");
+  if (existing) { existing.querySelector("input").focus(); return; }
+  openForms++;
+  const form = buildForm(
+    [
+      { name: "title", label: group ? "Название группы" : "Новая группа", value: group ? group.title : "", placeholder: "например, Дача", maxlength: 300 },
+      { name: "icon", label: "Значок", value: group ? group.icon : "📌", maxlength: 8 },
+    ],
+    {
+      submit: group ? "Сохранить" : "Добавить",
+      onCancel: () => { form.remove(); openForms--; },
+      onSubmit: (v) => {
+        if (!v.title.trim()) { toast("Название не может быть пустым"); return; }
+        form.remove();
+        openForms--;
+        sendOps([
+          group
+            ? { type: "group.edit", id: group.id, title: v.title, icon: v.icon }
+            : { type: "group.add", title: v.title, icon: v.icon },
+        ]);
+      },
+    },
+  );
+  grid.prepend(form);
+  form.querySelector("input").focus();
+}
+
+function paint() {
+  let done = 0;
+  let total = 0;
+  store.quests.forEach((g) => {
+    const d = g.items.filter((i) => i.done).length;
+    total += g.items.length;
+    done += d;
+    const cnt = document.querySelector('[data-cnt="' + g.id + '"]');
     if (cnt) cnt.textContent = d + "/" + g.items.length;
   });
-  document.getElementById("done-num").textContent = done;
-  document.getElementById("done-of").textContent = "из " + total + " сделано";
-  document.getElementById("bar").style.width = total ? (done/total*100)+"%": "0%";
+  $("#done-num").textContent = done;
+  $("#done-of").textContent = "из " + total + " сделано";
+  $("#bar").style.width = total ? (done / total) * 100 + "%" : "0%";
 
-  document.querySelectorAll(".qitem").forEach(el => {
-    const hide = onlyRest && state[el.dataset.key];
-    el.style.display = hide ? "none" : "";
+  document.querySelectorAll(".qitem").forEach((el) => {
+    const card = el.closest(".qcard");
+    const group = store.quests.find((g) => g.id === (card && card.dataset.group));
+    const item = group && group.items.find((i) => i.id === el.dataset.id);
+    el.style.display = onlyRest && item && item.done ? "none" : "";
   });
-  document.querySelectorAll(".qcard").forEach(card => {
-    const any = [...card.querySelectorAll(".qitem")].some(el => el.style.display !== "none");
-    card.style.display = any ? "" : "none";
+  document.querySelectorAll(".qcard").forEach((card) => {
+    const any = [...card.querySelectorAll(".qitem")].some((el) => el.style.display !== "none");
+    card.style.display = any || !onlyRest ? "" : "none";
   });
 }
 
-showRestBtn.addEventListener("click", () => {
-  onlyRest = !onlyRest;
-  showRestBtn.textContent = onlyRest ? "Показать все" : "Только невыполненное";
-  paint();
-});
-document.getElementById("reset").addEventListener("click", () => {
-  if (!confirm("Снять все отметки? Действие только в этом браузере.")) return;
-  Object.keys(state).forEach(k => delete state[k]);
-  localStorage.setItem(STORE, JSON.stringify(state));
-  document.querySelectorAll(".qitem input").forEach(cb => { cb.checked = false; cb.closest(".qitem").classList.remove("done"); });
-  paint();
-});
+/* ───────── рендер: напоминания ───────── */
+const MONTHS = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
+const MONTH_OPTIONS = MONTHS.map((label, i) => ({ value: i + 1, label }));
+const WHO_OPTIONS = [
+  { value: "", label: "общая" },
+  { value: "наша", label: "наша" },
+  { value: "киса", label: "киса" },
+  { value: "котик", label: "котик" },
+];
 
-/* ───────── напоминания ───────── */
-const jw = document.getElementById("jobs");
-BOT_JOBS.forEach(j => {
-  const el = document.createElement("div");
-  el.className = "job";
-  el.innerHTML = `
-    <div class="t">${j.time}<small>${j.every}</small></div>
-    <div class="body">
-      <h4><code>${j.name}</code><span class="st ${j.status}">${j.status === "on" ? "работает" : "на паузе"}</span></h4>
-      <p>${j.text}</p>
-    </div>`;
-  jw.appendChild(el);
-});
+function renderJobs() {
+  const w = $("#jobs");
+  w.textContent = "";
+  BOT_JOBS.forEach((j) => {
+    const el = node("div", "job");
+    const t = node("div", "t", j.time);
+    t.appendChild(node("small", "", j.every));
+    const body = node("div", "body");
+    const h4 = node("h4");
+    h4.appendChild(node("code", "", j.name));
+    h4.appendChild(node("span", "st " + j.status, j.status === "on" ? "работает" : "на паузе"));
+    body.appendChild(h4);
+    body.appendChild(node("p", "", j.text));
+    el.append(t, body);
+    w.appendChild(el);
+  });
+}
 
-const dw = document.getElementById("dates");
-DATES.forEach(x => {
-  const el = document.createElement("div");
-  el.className = "date";
-  const now = new Date(); now.setHours(0,0,0,0);
-  let next = new Date(now.getFullYear(), x.m-1, x.day);
-  if (next < now) next = new Date(now.getFullYear()+1, x.m-1, x.day);
-  const days = Math.round((next - now)/86400000);
-  const when = days === 0 ? "<b>сегодня</b> ★" : days === 1 ? "<b>завтра</b>" : `через <b>${days}</b> дн.`;
-  el.innerHTML = `<div class="dd">${x.d}</div><div class="small" style="margin-top:4px">${x.title}</div><div class="in">${when}</div>`;
-  dw.appendChild(el);
-});
+function countdown(d) {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  let next = new Date(now.getFullYear(), d.m - 1, d.day);
+  if (next < now) next = new Date(now.getFullYear() + 1, d.m - 1, d.day);
+  const days = Math.round((next - now) / 86400000);
+  const out = node("div", "in");
+  if (days === 0) out.innerHTML = "сегодня <b>★</b>";
+  else if (days === 1) out.innerHTML = "<b>завтра</b>";
+  else out.innerHTML = "через <b>" + days + "</b> дн.";
+  return out;
+}
 
-const rw = document.getElementById("regular");
-REGULAR.forEach(r => {
-  const el = document.createElement("div");
-  el.className = "r";
-  el.innerHTML = `<h4>${r.title}</h4><div class="when">${r.when}</div><p>${r.note}</p>${r.buy?`<span class="buy">${r.buy}</span>`:""}`;
-  rw.appendChild(el);
-});
+function renderDates() {
+  const w = $("#dates");
+  w.textContent = "";
+  const sorted = [...store.dates].sort((a, b) => a.m - b.m || a.day - b.day);
+  sorted.forEach((d) => {
+    const card = node("div", "date");
+    card.dataset.id = d.id;
+    card.appendChild(node("div", "dd", String(d.day).padStart(2, "0") + "." + String(d.m).padStart(2, "0")));
+    const title = node("div", "small", d.title);
+    title.style.marginTop = "4px";
+    card.appendChild(title);
+    card.appendChild(countdown(d));
+    if (d.who) card.appendChild(node("span", "who", d.who));
+    const act = node("span", "rowact");
+    act.appendChild(iconBtn("✎", "Изменить дату", () => openDateForm(d)));
+    act.appendChild(iconBtn("✕", "Удалить дату", () => {
+      if (!confirm("Удалить «" + d.title + "»?")) return;
+      sendOps([{ type: "date.del", id: d.id }]);
+    }));
+    card.appendChild(act);
+    w.appendChild(card);
+  });
+}
 
-/* ───────── автошкола ───────── */
-document.getElementById("drive-intro").innerHTML = `
-  <h3>Вводная</h3>
-  <ul>
-    <li><b>Бюджет:</b> ${DRIVE_INTRO.budget}</li>
-    <li><b>Коробка:</b> ${DRIVE_INTRO.gearbox}</li>
-    <li><b>Где:</b> ${DRIVE_INTRO.area}</li>
-    <li><b>Исходно:</b> ${DRIVE_INTRO.state}</li>
-  </ul>
-  <div class="chips">
-    <span class="chip">права и навык — две разные покупки</span>
-    <span class="chip">больше практики, теорию повторяем</span>
-    <span class="chip">автодромы всё равно не в центре</span>
-  </div>`;
+function openDateForm(date) {
+  const host = date ? document.querySelector('.date[data-id="' + date.id + '"]') : null;
+  if (host && host.nextElementSibling && host.nextElementSibling.classList.contains("inline")) return;
+  openForms++;
+  const form = buildForm(
+    [
+      { name: "title", label: "Что за дата", value: date ? date.title : "", placeholder: "День рождения…", maxlength: 300 },
+      { name: "day", label: "День", type: "number", min: 1, max: 31, value: date ? date.day : "" },
+      { name: "m", label: "Месяц", type: "select", options: MONTH_OPTIONS, value: date ? date.m : 1 },
+      { name: "who", label: "Чья", type: "select", options: WHO_OPTIONS, value: date ? date.who || "" : "" },
+    ],
+    {
+      submit: date ? "Сохранить" : "Добавить",
+      onCancel: () => { form.remove(); openForms--; },
+      onSubmit: (v) => {
+        if (!v.title.trim()) { toast("Название не может быть пустым"); return; }
+        if (!v.day) { toast("Нужен день месяца"); return; }
+        form.remove();
+        openForms--;
+        const payload = { title: v.title, day: Number(v.day), m: Number(v.m), who: v.who };
+        sendOps([date ? Object.assign({ type: "date.edit", id: date.id }, payload) : Object.assign({ type: "date.add" }, payload)]);
+      },
+    },
+  );
+  if (host) host.after(form);
+  else $("#dates").appendChild(form);
+  form.querySelector("input").focus();
+}
 
-document.getElementById("license").innerHTML = `
-  <h3>Итого ${LICENSE.total} · экзамен сдавать не нужно</h3>
-  <div class="tblwrap"><table class="money">
-    <thead><tr><th>Что</th><th>Цена</th></tr></thead>
-    <tbody>${LICENSE.items.map(i => `<tr><td><b>${i.t}</b><div class="small muted">${i.n}</div></td><td class="v">${i.v}</td></tr>`).join("")}</tbody>
-  </table></div>
-  <ul>${LICENSE.notes.map(n => `<li>${n}</li>`).join("")}</ul>`;
+function renderRegular() {
+  const w = $("#regular");
+  w.textContent = "";
+  store.regular.forEach((r) => {
+    const card = node("div", "r");
+    card.dataset.id = r.id;
+    card.appendChild(node("h4", "", r.title));
+    card.appendChild(node("div", "when", r.when));
+    if (r.note) card.appendChild(node("p", "", r.note));
+    if (r.buy) card.appendChild(node("span", "buy", r.buy));
+    const act = node("span", "rowact");
+    act.appendChild(iconBtn("✎", "Изменить дело", () => openRegularForm(r)));
+    act.appendChild(iconBtn("✕", "Удалить дело", () => {
+      if (!confirm("Удалить «" + r.title + "»?")) return;
+      sendOps([{ type: "regular.del", id: r.id }]);
+    }));
+    card.appendChild(act);
+    w.appendChild(card);
+  });
+}
 
-document.getElementById("schools").innerHTML = SCHOOLS.map(s => `
-  <div class="school ${s.tone}">
-    <div class="top"><h3>${s.name}</h3><span class="price">${s.price}</span></div>
-    <div class="addr">${s.addr}${s.phone && s.phone !== "—" ? " · " + s.phone : ""}</div>
+function openRegularForm(reg) {
+  const host = reg ? document.querySelector('.reg .r[data-id="' + reg.id + '"]') : null;
+  if (host && host.nextElementSibling && host.nextElementSibling.classList.contains("inline")) return;
+  openForms++;
+  const form = buildForm(
+    [
+      { name: "title", label: "Дело", value: reg ? reg.title : "", maxlength: 300 },
+      { name: "when", label: "Когда", value: reg ? reg.when : "", placeholder: "15-го числа каждого месяца", maxlength: 300 },
+      { name: "note", label: "Заметка", type: "textarea", value: reg ? reg.note : "", maxlength: 800 },
+      { name: "buy", label: "Купить заранее", value: reg ? reg.buy : "", placeholder: "например, купить 8-го", maxlength: 300 },
+    ],
+    {
+      submit: reg ? "Сохранить" : "Добавить",
+      onCancel: () => { form.remove(); openForms--; },
+      onSubmit: (v) => {
+        if (!v.title.trim()) { toast("Название не может быть пустым"); return; }
+        form.remove();
+        openForms--;
+        const payload = { title: v.title, when: v.when, note: v.note, buy: v.buy };
+        sendOps([reg ? Object.assign({ type: "regular.edit", id: reg.id }, payload) : Object.assign({ type: "regular.add" }, payload)]);
+      },
+    },
+  );
+  if (host) host.after(form);
+  else $("#regular").appendChild(form);
+  form.querySelector("input").focus();
+}
+
+/* ───────── рендер: автошкола ───────── */
+function renderDriving() {
+  $("#drive-intro").innerHTML = `
+    <h3>Вводная</h3>
     <ul>
-      ${s.hours ? `<li><b>Практика:</b> ${s.hours}</li>` : ""}
-      ${s.tags.map(t => `<li>${t}</li>`).join("")}
+      <li><b>Бюджет:</b> ${DRIVE_INTRO.budget}</li>
+      <li><b>Коробка:</b> ${DRIVE_INTRO.gearbox}</li>
+      <li><b>Где:</b> ${DRIVE_INTRO.area}</li>
+      <li><b>Исходно:</b> ${DRIVE_INTRO.state}</li>
     </ul>
-    <p class="verdict"><b>Вывод:</b> ${s.verdict}</p>
-  </div>`).join("");
+    <div class="chips">
+      <span class="chip">права и навык — две разные покупки</span>
+      <span class="chip">больше практики, теорию повторяем</span>
+      <span class="chip">автодромы всё равно не в центре</span>
+    </div>`;
 
-document.getElementById("math").innerHTML = FORSAZH_MATH.map(m => `
-  <tr class="${m.hours === 12 ? "hi" : ""}">
-    <td>${m.hours} ч${m.full ? " (полная программа, 56 ч)" : ""}</td>
-    <td class="v">${m.sum.toLocaleString("ru-RU")} ₽</td>
-    <td class="small muted">${m.full ? "не наш случай — это для сдающих с нуля" : (m.hours === 12 ? "наш выбор: 12 часов и добираем по факту" : "теория + практика")}</td>
-  </tr>`).join("");
+  $("#license").innerHTML = `
+    <h3>Итого ${LICENSE.total} · экзамен сдавать не нужно</h3>
+    <div class="tblwrap"><table class="money">
+      <thead><tr><th>Что</th><th>Цена</th></tr></thead>
+      <tbody>${LICENSE.items.map((i) => `<tr><td><b>${i.t}</b><div class="small muted">${i.n}</div></td><td class="v">${i.v}</td></tr>`).join("")}</tbody>
+    </table></div>
+    <ul>${LICENSE.notes.map((n) => `<li>${n}</li>`).join("")}</ul>`;
 
-document.getElementById("private").innerHTML = `
-  <div class="panel">
-    <h3>Расценки</h3>
-    <table class="money" style="border:0">
-      <tbody>${PRIVATE.rates.map(r => `<tr><td><b>${r.t}</b><div class="small muted">${r.n}</div></td><td class="v">${r.v}</td></tr>`).join("")}</tbody>
-    </table>
-  </div>
-  <div class="panel">
-    <h3>Что проверить до первого занятия</h3>
-    <ul>${PRIVATE.checks.map(c => `<li>${c}</li>`).join("")}</ul>
-  </div>`;
+  const schoolsBox = $("#schools");
+  schoolsBox.textContent = "";
+  SCHOOLS.forEach((s) => {
+    const card = node("div", "school " + s.tone);
 
-document.getElementById("totals").innerHTML = TOTALS.map(t => `
-  <tr><td><b>${t.t}</b>${t.n ? `<div class="small muted">${t.n}</div>` : ""}</td><td class="v">${t.v}</td></tr>`).join("");
+    const top = node("div", "top");
+    top.appendChild(node("h3", "", s.name));
+    top.appendChild(node("span", "price", s.price));
+    card.appendChild(top);
 
-document.getElementById("reco").innerHTML = RECOMMENDATION.map(r => `<li>${r}</li>`).join("");
-document.getElementById("call").innerHTML = CALL_SCRIPT.map(c => `<li>${c}</li>`).join("");
+    const addr = node("div", "addr");
+    addr.appendChild(document.createTextNode(s.addr + " · "));
+    const tel = node("a", "", s.phone);
+    tel.href = "tel:" + s.phone.replace(/[^\d+]/g, "");
+    addr.appendChild(tel);
+    if (s.phone2) {
+      addr.appendChild(document.createTextNode(" / "));
+      const tel2 = node("a", "", s.phone2);
+      tel2.href = "tel:" + s.phone2.replace(/[^\d+]/g, "");
+      addr.appendChild(tel2);
+    }
+    card.appendChild(addr);
 
-paint();
+    const links = node("div", "links");
+    const addLink = (label, href) => {
+      const a = node("a", "", label);
+      a.href = href;
+      if (href.indexOf("http") === 0) { a.target = "_blank"; a.rel = "noopener noreferrer"; }
+      links.appendChild(a);
+    };
+    if (s.site) addLink("сайт", s.site);
+    if (s.vk) addLink("ВКонтакте", s.vk);
+    if (s.mail) addLink("почта", "mailto:" + s.mail);
+    addLink("на карте", "https://yandex.ru/maps/?text=" + encodeURIComponent("Воронеж, " + s.name + ", автошкола"));
+    card.appendChild(links);
+
+    const ul = node("ul");
+    if (s.hours) {
+      const li = node("li");
+      li.appendChild(node("b", "", "Практика: "));
+      li.appendChild(document.createTextNode(s.hours));
+      ul.appendChild(li);
+    }
+    s.tags.forEach((t) => ul.appendChild(node("li", "", t)));
+    card.appendChild(ul);
+
+    const verdict = node("p", "verdict");
+    verdict.appendChild(node("b", "", "Вывод: "));
+    verdict.appendChild(document.createTextNode(s.verdict));
+    card.appendChild(verdict);
+
+    schoolsBox.appendChild(card);
+  });
+
+  $("#math").innerHTML = FORSAZH_MATH.map((m) => `
+    <tr class="${m.hours === 12 ? "hi" : ""}">
+      <td>${m.hours} ч${m.full ? " (полная программа, 56 ч)" : ""}</td>
+      <td class="v">${m.sum.toLocaleString("ru-RU")} ₽</td>
+      <td class="small muted">${m.full ? "не наш случай — это для сдающих с нуля" : m.hours === 12 ? "наш выбор: 12 часов и добираем по факту" : "теория + практика"}</td>
+    </tr>`).join("");
+
+  $("#private").innerHTML = `
+    <div class="panel">
+      <h3>Расценки</h3>
+      <table class="money" style="border:0">
+        <tbody>${PRIVATE.rates.map((r) => `<tr><td><b>${r.t}</b><div class="small muted">${r.n}</div></td><td class="v">${r.v}</td></tr>`).join("")}</tbody>
+      </table>
+    </div>
+    <div class="panel">
+      <h3>Что проверить до первого занятия</h3>
+      <ul>${PRIVATE.checks.map((c) => `<li>${c}</li>`).join("")}</ul>
+    </div>`;
+
+  $("#totals").innerHTML = TOTALS.map((t) => `
+    <tr><td><b>${t.t}</b>${t.n ? `<div class="small muted">${t.n}</div>` : ""}</td><td class="v">${t.v}</td></tr>`).join("");
+
+  $("#reco").innerHTML = RECOMMENDATION.map((r) => `<li>${r}</li>`).join("");
+  $("#call").innerHTML = CALL_SCRIPT.map((c) => `<li>${c}</li>`).join("");
+}
+
+/* ───────── общий рендер ───────── */
+function renderAll() {
+  renderQuests();
+  renderDates();
+  renderRegular();
+}
+
+/* ───────── пароль ───────── */
+function openLock(message) {
+  $("#lock").classList.add("on");
+  $("#lock-err").textContent = message || "";
+  setTimeout(() => $("#lock-pass").focus(), 60);
+}
+function closeLock() {
+  $("#lock").classList.remove("on");
+  $("#lock-pass").value = "";
+}
+
+$("#lock-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const pass = $("#lock-pass").value.trim();
+  if (!pass) return;
+  const btn = e.target.querySelector("button[type=submit]");
+  btn.disabled = true;
+  $("#lock-err").textContent = "проверяю…";
+  try {
+    const res = await NotesApi.login(pass);
+    token = res.token;
+    localStorage.setItem(TOKEN_KEY, token);
+    closeLock();
+    await refresh();
+    if (!store.quests.length) toast("Во входе получилось, но список с сервера пустой");
+  } catch (err) {
+    if (err && err.status === 403) $("#lock-err").textContent = "Не тот пароль";
+    else if (err && err.status === 429) $("#lock-err").textContent = "Слишком много попыток — подождите 15 минут";
+    else $("#lock-err").textContent = "Нет связи с сервером";
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+/* ───────── кнопки ───────── */
+$("#show-rest").addEventListener("click", (e) => {
+  onlyRest = !onlyRest;
+  e.currentTarget.textContent = onlyRest ? "Показать все" : "Только невыполненное";
+  paint();
+});
+$("#add-group").addEventListener("click", () => openGroupForm(null));
+$("#add-date").addEventListener("click", () => openDateForm(null));
+$("#add-regular").addEventListener("click", () => openRegularForm(null));
+$("#reset").addEventListener("click", () => {
+  if (!confirm("Снять все отметки? Галочки исчезнут у всех, на всех устройствах.")) return;
+  sendOps([{ type: "quests.reset" }]);
+});
+
+/* ───────── старт ───────── */
+renderJobs();
+renderDriving();
+
+if (!cacheLoad()) store = seedState();
+renderAll();
+
+if (token) {
+  refresh();
+} else {
+  setSync("off", "нужен пароль");
+  openLock();
+}
+
+/* подтягиваем правки с других устройств */
+setInterval(() => {
+  if (!token || openForms > 0 || document.visibilityState !== "visible") return;
+  NotesApi.getState(token)
+    .then((res) => { if (res && res.data && res.rev !== rev) applyRemote(res); })
+    .catch(() => {});
+}, 20000);
+
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && token && openForms === 0) refresh({ quiet: true });
+});
 </script>
 </body>
 </html>

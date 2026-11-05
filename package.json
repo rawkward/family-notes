@@ -1,0 +1,10 @@
+{
+  "name": "family-notes",
+  "type": "module",
+  "private": true,
+  "description": "Семейный сайт-справочник: квесты, напоминания, автошкола",
+  "scripts": {
+    "test": "node tests/smoke.mjs && node --test tests/ops.test.mjs",
+    "serve": "npx --yes http-server -p 8765 ."
+  }
+}

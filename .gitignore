@@ -2,3 +2,5 @@ node_modules/
 package-lock.json
 cache-inline.js
 .DS_Store
+worker/.wrangler/
+worker/node_modules/

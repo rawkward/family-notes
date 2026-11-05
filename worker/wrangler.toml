@@ -1,0 +1,8 @@
+name = "family-notes-api"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "family-notes"
+database_id = "e141f203-51b1-444c-b6b3-d5447a0f26b1"
