@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Наши заметки — квесты, напоминания, автошкола</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#faf6ef; --bg2:#f3ece1; --card:#fffdf9;
+  --ink:#1c1917; --muted:#6f675d; --line:#e6ddce;
+  --accent:#c2410c; --accent-soft:#fbe8dd;
+  --ok:#4d7c0f; --ok-soft:#eef4e2; --warn:#b45309; --warn-soft:#fdf1dd;
+  --bad:#9f1239; --bad-soft:#fbe4e9;
+  --serif:"Fraunces", Georgia, "Times New Roman", serif;
+  --sans:"Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.15;letter-spacing:-0.01em}
+h2{font-size:clamp(1.4rem,2.6vw,1.9rem);margin:0 0 6px}
+h3{font-size:1.05rem;margin:0 0 6px}
+.muted{color:var(--muted)}
+.small{font-size:.83rem}
+.eyebrow{font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+
+.topbar{position:sticky;top:0;z-index:1100;background:rgba(250,246,239,.92);backdrop-filter:saturate(1.2) blur(8px);border-bottom:1px solid var(--line);padding:10px 20px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.brand{font-family:var(--serif);font-weight:700;font-size:1.05rem;white-space:nowrap}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+.tab{border:1px solid var(--line);background:var(--card);color:var(--muted);border-radius:999px;padding:7px 15px;font:inherit;font-size:.87rem;font-weight:600;cursor:pointer;transition:.15s}
+.tab:hover{color:var(--ink);border-color:#d6c9b6}
+.tab.on{background:var(--ink);border-color:var(--ink);color:#fff}
+
+.wrap{max-width:1060px;margin:0 auto;padding:0 20px}
+.hero{padding:40px 0 22px}
+.hero h1{font-size:clamp(1.9rem,4.4vw,2.7rem);margin:0 0 10px}
+.hero p{margin:0;color:var(--muted);max-width:66ch}
+.hero .kbd{display:inline-block;background:var(--bg2);border:1px solid var(--line);border-radius:6px;padding:1px 7px;font-size:.8rem;font-family:ui-monospace,monospace;color:var(--ink)}
+
+section.view{display:none;padding-bottom:70px}
+section.view.on{display:block}
+
+/* progress */
+.progress-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin:6px 0 26px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.progress-card .num{font-family:var(--serif);font-size:1.9rem;font-weight:700;line-height:1}
+.bar{flex:1;min-width:180px;height:10px;background:var(--bg2);border-radius:999px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#65a30d,#4d7c0f);border-radius:999px;transition:width .35s}
+.ghost{background:none;border:1px solid var(--line);border-radius:999px;padding:7px 14px;font:inherit;font-size:.83rem;font-weight:600;color:var(--muted);cursor:pointer}
+.ghost:hover{color:var(--ink);border-color:#d6c9b6}
+
+/* quest groups */
+.qgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.qcard{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 18px 10px}
+.qcard header{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+.qcard header .ic{font-size:1.05rem}
+.qcard header h3{font-size:1rem;margin:0}
+.qcard header .cnt{margin-left:auto;font-size:.74rem;color:var(--muted);font-weight:600;background:var(--bg2);border-radius:999px;padding:2px 9px}
+.qitem{display:flex;gap:11px;align-items:flex-start;padding:8px 0;border-top:1px solid #f0e9dd;cursor:pointer}
+.qitem:first-of-type{border-top:0}
+.qitem input{appearance:none;width:19px;height:19px;flex:0 0 19px;margin:2px 0 0;border:1.5px solid #cfc3b1;border-radius:6px;background:#fff;cursor:pointer;transition:.15s;position:relative}
+.qitem input:checked{background:var(--ok);border-color:var(--ok)}
+.qitem input:checked::after{content:"";position:absolute;left:6px;top:2px;width:4px;height:10px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.qitem .txt{font-size:.94rem}
+.qitem .txt small{display:block;color:var(--muted);font-size:.79rem;margin-top:1px}
+.qitem.done .txt{color:#a79e92;text-decoration:line-through}
+.qitem.done .txt small{text-decoration:none}
+
+/* reminder cards */
+.jobs{display:grid;gap:12px;margin-bottom:34px}
+.job{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:15px 18px;display:flex;gap:16px;align-items:flex-start}
+.job .t{font-family:var(--serif);font-size:1.25rem;font-weight:700;min-width:66px;line-height:1.2}
+.job .t small{display:block;font-family:var(--sans);font-size:.7rem;font-weight:600;color:var(--muted);letter-spacing:.04em;margin-top:2px}
+.job .body p{margin:0;font-size:.9rem;color:#3f3a34}
+.job .body h4{margin:0 0 4px;font-family:var(--sans);font-size:.85rem;font-weight:700;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.job .body h4 code{font-size:.78rem;background:var(--bg2);border-radius:5px;padding:1px 6px;color:var(--muted);font-weight:500}
+.st{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:2px 8px}
+.st.on{background:var(--ok-soft);color:var(--ok)}
+.st.paused{background:var(--warn-soft);color:var(--warn)}
+
+.dates{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-bottom:34px}
+.date{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.date .dd{font-family:var(--serif);font-size:1.6rem;font-weight:700;line-height:1}
+.date .in{margin-top:8px;font-size:.8rem;color:var(--muted)}
+.date .in b{color:var(--accent);font-weight:600}
+
+.reg{display:grid;gap:12px}
+.reg .r{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.reg .r h4{margin:0 0 4px;font-family:var(--serif);font-size:1.02rem}
+.reg .r .when{font-size:.86rem;font-weight:600;color:var(--accent)}
+.reg .r p{margin:6px 0 0;font-size:.87rem;color:var(--muted)}
+.reg .r .buy{display:inline-block;margin-top:8px;font-size:.76rem;font-weight:600;background:var(--bg2);border-radius:999px;padding:3px 10px;color:var(--ink)}
+
+/* driving */
+.intro-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin-bottom:22px}
+.intro-card ul{margin:10px 0 0;padding-left:18px}
+.intro-card li{font-size:.9rem;margin:4px 0}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.chip{background:var(--accent-soft);color:#94340a;border-radius:999px;padding:4px 12px;font-size:.78rem;font-weight:600}
+
+.blocktl{display:flex;align-items:baseline;gap:10px;margin:34px 0 12px}
+.blocktl h2{font-size:1.35rem;margin:0}
+.blocktl .n{font-size:.76rem;color:var(--muted);font-weight:600}
+
+.school{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:12px}
+.school.best{border-left-color:var(--ok)}
+.school.good{border-left-color:#0f766e}
+.school.warn{border-left-color:var(--warn)}
+.school.bad{border-left-color:var(--bad)}
+.school .top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.school .top h3{font-size:1.08rem;margin:0}
+.school .top .price{margin-left:auto;font-weight:700;font-size:.92rem}
+.school .addr{font-size:.82rem;color:var(--muted);margin:2px 0 10px}
+.school .addr a{color:var(--muted);text-decoration:underline dotted}
+.school ul{margin:0 0 10px;padding-left:17px}
+.school li{font-size:.86rem;margin:3px 0}
+.school .verdict{font-size:.86rem;border-top:1px solid #f0e9dd;padding-top:9px;margin:0;color:#3f3a34}
+.school .verdict b{color:var(--ink)}
+
+.money{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.money th,.money td{text-align:left;padding:10px 14px;font-size:.88rem;border-bottom:1px solid #f0e9dd}
+.money th{background:var(--bg2);font-size:.76rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.money tr:last-child td{border-bottom:0}
+.money td.v{font-weight:700;white-space:nowrap}
+.money tr.hi td{background:var(--ok-soft)}
+.tblwrap{overflow-x:auto}
+
+.twocol{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px}
+.panel h3{font-size:1.02rem}
+.panel ol,.panel ul{margin:8px 0 0;padding-left:19px}
+.panel li{font-size:.88rem;margin:6px 0}
+.callout{background:var(--warn-soft);border:1px solid #f0dcbc;border-radius:14px;padding:16px 18px;margin-top:16px}
+.callout h3{font-size:1rem;margin:0 0 6px}
+.callout p{margin:0;font-size:.88rem}
+
+footer{border-top:1px solid var(--line);margin-top:30px;padding:22px 0 40px;color:var(--muted);font-size:.8rem}
+footer .wrap{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+@media (max-width:620px){
+  .hero{padding:26px 0 14px}
+  .job{flex-direction:column;gap:6px}
+  .job .t{display:flex;gap:8px;align-items:baseline}
+  .job .t small{margin:0}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Наши заметки ★</div>
+  <nav class="tabs">
+    <button class="tab on" data-view="quests">Квесты</button>
+    <button class="tab" data-view="reminders">Напоминания</button>
+    <button class="tab" data-view="driving">Автошкола</button>
+  </nav>
+</div>
+
+<!-- ══════════ КВЕСТЫ ══════════ -->
+<section class="view on" id="v-quests">
+  <div class="wrap">
+    <div class="hero">
+      <div class="eyebrow">Общий список дел</div>
+      <h1>Квесты</h1>
+      <p>Наш список покупок, ремонта, кошки кисы и рутины. Отметки сохраняются в этом браузере — на телефоне и на компьютере они независимы. Источник — <span class="kbd">quests.md</span>, от 29.10.2026.</p>
+    </div>
+
+    <div class="progress-card">
+      <div class="num" id="done-num">0</div>
+      <div class="small muted" id="done-of">из 0 сделано</div>
+      <div class="bar"><i id="bar"></i></div>
+      <button class="ghost" id="show-rest">Только невыполненное</button>
+      <button class="ghost" id="reset">Сбросить отметки</button>
+    </div>
+
+    <div class="qgrid" id="quests"></div>
+  </div>
+</section>
+
+<!-- ══════════ НАПОМИНАНИЯ ══════════ -->
+<section class="view" id="v-reminders">
+  <div class="wrap">
+    <div class="hero">
+      <div class="eyebrow">Что и когда</div>
+      <h1>Напоминания</h1>
+      <p>Две части: то, что бот сам пишет в чат «Людское», и то, что мы держим в голове — даты и регулярные дела.</p>
+    </div>
+
+    <div class="blocktl"><h2>Бот присылает сам</h2><span class="n">4 задачи, токены не тратятся</span></div>
+    <div class="jobs" id="jobs"></div>
+
+    <div class="blocktl"><h2>Даты</h2><span class="n">повторяются каждый год</span></div>
+    <div class="dates" id="dates"></div>
+
+    <div class="blocktl"><h2>Регулярные дела</h2><span class="n">привязка к числу месяца</span></div>
+    <div class="reg" id="regular"></div>
+  </div>
+</section>
+
+<!-- ══════════ АВТОШКОЛА ══════════ -->
+<section class="view" id="v-driving">
+  <div class="wrap">
+    <div class="hero">
+      <div class="eyebrow">Воронеж · ноябрь 2026</div>
+      <h1>Автошкола: курсы, школы, частники</h1>
+      <p>Всё, что мы выяснили про возвращение за руль. Цены — по прайсам ноября 2026, перед записью подтверждать по телефону.</p>
+    </div>
+
+    <div class="intro-card" id="drive-intro"></div>
+
+    <div class="blocktl"><h2>Сначала — права, это отдельная покупка</h2></div>
+    <div class="panel" id="license"></div>
+
+    <div class="blocktl"><h2>Школы рядом с домом</h2><span class="n">от ближней к дальней</span></div>
+    <div id="schools"></div>
+
+    <div class="blocktl"><h2>Сколько выходит «Форсаж» на автомате</h2><span class="n">теория 15 990 ₽ + 700 ₽/час</span></div>
+    <div class="tblwrap">
+      <table class="money">
+        <thead><tr><th>Практика</th><th>Итого с человека</th><th>Что это</th></tr></thead>
+        <tbody id="math"></tbody>
+      </table>
+    </div>
+
+    <div class="blocktl"><h2>Частный инструктор</h2></div>
+    <div class="twocol" id="private"></div>
+
+    <div class="blocktl"><h2>Итог на двоих</h2><span class="n">включая замену прав — 12 200 ₽</span></div>
+    <div class="tblwrap">
+      <table class="money">
+        <thead><tr><th>Вариант</th><th>Всего на двоих</th></tr></thead>
+        <tbody id="totals"></tbody>
+      </table>
+    </div>
+
+    <div class="blocktl"><h2>Что делаем</h2></div>
+    <div class="panel"><ol id="reco"></ol></div>
+
+    <div class="twocol" style="margin-top:16px">
+      <div class="panel">
+        <h3>Скрипт звонка — по нему и сравнивать</h3>
+        <ol id="call"></ol>
+      </div>
+      <div class="callout">
+        <h3>⏰ Про сроки</h3>
+        <p>У «РЭД» акция до 1 декабря, «Вектор» предупреждает о росте цен с 1 декабря. Если решаемся — договор в ноябре по текущей цене, теорию можно начать в декабре, практику после Нового года.</p>
+        <p style="margin-top:8px">Отдельно: <b>130 часов теории очно — это 2,5 месяца по вечерам.</b> Сразу спрашивать дистанционный формат в реальном времени.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>Собрано 05.11.2026</span>
+    <span>·</span>
+    <span>цены проверять перед звонком</span>
+    <span style="margin-left:auto">★</span>
+  </div>
+</footer>
+
+<script src="assets/notes.js"></script>
+<script>
+/* ───────── тэбы ───────── */
+const views = ["quests","reminders","driving"];
+function show(v){
+  if(!views.includes(v)) v = "quests";
+  document.querySelectorAll(".view").forEach(s => s.classList.toggle("on", s.id === "v-"+v));
+  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("on", b.dataset.view === v));
+  if (history.replaceState) history.replaceState(null,"","#"+v);
+  try { window.scrollTo({top:0, behavior:"instant"}); } catch (e) {}
+}
+document.querySelectorAll(".tab").forEach(b => b.addEventListener("click", () => show(b.dataset.view)));
+show((location.hash||"").replace("#",""));
+
+/* ───────── квесты ───────── */
+const STORE = "family-notes-quests-v1";
+const state = JSON.parse(localStorage.getItem(STORE) || "{}");
+const qwrap = document.getElementById("quests");
+const showRestBtn = document.getElementById("show-rest");
+let onlyRest = false;
+
+QUESTS.forEach(g => {
+  const card = document.createElement("div");
+  card.className = "qcard";
+  const head = document.createElement("header");
+  head.innerHTML = `<span class="ic">${g.icon}</span><h3>${g.title}</h3><span class="cnt" data-cnt="${g.id}"></span>`;
+  card.appendChild(head);
+
+  g.items.forEach((it,i) => {
+    const key = g.id+":"+i;
+    const lab = document.createElement("label");
+    lab.className = "qitem";
+    lab.dataset.key = key;
+    lab.innerHTML = `<input type="checkbox" ${state[key]?"checked":""}><span class="txt">${it.t}${it.n?`<small>${it.n}</small>`:""}</span>`;
+    const cb = lab.querySelector("input");
+    cb.addEventListener("change", () => {
+      state[key] = cb.checked;
+      localStorage.setItem(STORE, JSON.stringify(state));
+      lab.classList.toggle("done", cb.checked);
+      paint();
+    });
+    lab.classList.toggle("done", !!state[key]);
+    card.appendChild(lab);
+  });
+  qwrap.appendChild(card);
+});
+
+function paint(){
+  let done = 0, total = 0;
+  QUESTS.forEach(g => {
+    let d = 0;
+    g.items.forEach((_,i) => { if(state[g.id+":"+i]) d++; });
+    total += g.items.length; done += d;
+    const cnt = document.querySelector(`[data-cnt="${g.id}"]`);
+    if (cnt) cnt.textContent = d + "/" + g.items.length;
+  });
+  document.getElementById("done-num").textContent = done;
+  document.getElementById("done-of").textContent = "из " + total + " сделано";
+  document.getElementById("bar").style.width = total ? (done/total*100)+"%": "0%";
+
+  document.querySelectorAll(".qitem").forEach(el => {
+    const hide = onlyRest && state[el.dataset.key];
+    el.style.display = hide ? "none" : "";
+  });
+  document.querySelectorAll(".qcard").forEach(card => {
+    const any = [...card.querySelectorAll(".qitem")].some(el => el.style.display !== "none");
+    card.style.display = any ? "" : "none";
+  });
+}
+
+showRestBtn.addEventListener("click", () => {
+  onlyRest = !onlyRest;
+  showRestBtn.textContent = onlyRest ? "Показать все" : "Только невыполненное";
+  paint();
+});
+document.getElementById("reset").addEventListener("click", () => {
+  if (!confirm("Снять все отметки? Действие только в этом браузере.")) return;
+  Object.keys(state).forEach(k => delete state[k]);
+  localStorage.setItem(STORE, JSON.stringify(state));
+  document.querySelectorAll(".qitem input").forEach(cb => { cb.checked = false; cb.closest(".qitem").classList.remove("done"); });
+  paint();
+});
+
+/* ───────── напоминания ───────── */
+const jw = document.getElementById("jobs");
+BOT_JOBS.forEach(j => {
+  const el = document.createElement("div");
+  el.className = "job";
+  el.innerHTML = `
+    <div class="t">${j.time}<small>${j.every}</small></div>
+    <div class="body">
+      <h4><code>${j.name}</code><span class="st ${j.status}">${j.status === "on" ? "работает" : "на паузе"}</span></h4>
+      <p>${j.text}</p>
+    </div>`;
+  jw.appendChild(el);
+});
+
+const dw = document.getElementById("dates");
+DATES.forEach(x => {
+  const el = document.createElement("div");
+  el.className = "date";
+  const now = new Date(); now.setHours(0,0,0,0);
+  let next = new Date(now.getFullYear(), x.m-1, x.day);
+  if (next < now) next = new Date(now.getFullYear()+1, x.m-1, x.day);
+  const days = Math.round((next - now)/86400000);
+  const when = days === 0 ? "<b>сегодня</b> ★" : days === 1 ? "<b>завтра</b>" : `через <b>${days}</b> дн.`;
+  el.innerHTML = `<div class="dd">${x.d}</div><div class="small" style="margin-top:4px">${x.title}</div><div class="in">${when}</div>`;
+  dw.appendChild(el);
+});
+
+const rw = document.getElementById("regular");
+REGULAR.forEach(r => {
+  const el = document.createElement("div");
+  el.className = "r";
+  el.innerHTML = `<h4>${r.title}</h4><div class="when">${r.when}</div><p>${r.note}</p>${r.buy?`<span class="buy">${r.buy}</span>`:""}`;
+  rw.appendChild(el);
+});
+
+/* ───────── автошкола ───────── */
+document.getElementById("drive-intro").innerHTML = `
+  <h3>Вводная</h3>
+  <ul>
+    <li><b>Бюджет:</b> ${DRIVE_INTRO.budget}</li>
+    <li><b>Коробка:</b> ${DRIVE_INTRO.gearbox}</li>
+    <li><b>Где:</b> ${DRIVE_INTRO.area}</li>
+    <li><b>Исходно:</b> ${DRIVE_INTRO.state}</li>
+  </ul>
+  <div class="chips">
+    <span class="chip">права и навык — две разные покупки</span>
+    <span class="chip">больше практики, теорию повторяем</span>
+    <span class="chip">автодромы всё равно не в центре</span>
+  </div>`;
+
+document.getElementById("license").innerHTML = `
+  <h3>Итого ${LICENSE.total} · экзамен сдавать не нужно</h3>
+  <div class="tblwrap"><table class="money">
+    <thead><tr><th>Что</th><th>Цена</th></tr></thead>
+    <tbody>${LICENSE.items.map(i => `<tr><td><b>${i.t}</b><div class="small muted">${i.n}</div></td><td class="v">${i.v}</td></tr>`).join("")}</tbody>
+  </table></div>
+  <ul>${LICENSE.notes.map(n => `<li>${n}</li>`).join("")}</ul>`;
+
+document.getElementById("schools").innerHTML = SCHOOLS.map(s => `
+  <div class="school ${s.tone}">
+    <div class="top"><h3>${s.name}</h3><span class="price">${s.price}</span></div>
+    <div class="addr">${s.addr}${s.phone && s.phone !== "—" ? " · " + s.phone : ""}</div>
+    <ul>
+      ${s.hours ? `<li><b>Практика:</b> ${s.hours}</li>` : ""}
+      ${s.tags.map(t => `<li>${t}</li>`).join("")}
+    </ul>
+    <p class="verdict"><b>Вывод:</b> ${s.verdict}</p>
+  </div>`).join("");
+
+document.getElementById("math").innerHTML = FORSAZH_MATH.map(m => `
+  <tr class="${m.hours === 12 ? "hi" : ""}">
+    <td>${m.hours} ч${m.full ? " (полная программа, 56 ч)" : ""}</td>
+    <td class="v">${m.sum.toLocaleString("ru-RU")} ₽</td>
+    <td class="small muted">${m.full ? "не наш случай — это для сдающих с нуля" : (m.hours === 12 ? "наш выбор: 12 часов и добираем по факту" : "теория + практика")}</td>
+  </tr>`).join("");
+
+document.getElementById("private").innerHTML = `
+  <div class="panel">
+    <h3>Расценки</h3>
+    <table class="money" style="border:0">
+      <tbody>${PRIVATE.rates.map(r => `<tr><td><b>${r.t}</b><div class="small muted">${r.n}</div></td><td class="v">${r.v}</td></tr>`).join("")}</tbody>
+    </table>
+  </div>
+  <div class="panel">
+    <h3>Что проверить до первого занятия</h3>
+    <ul>${PRIVATE.checks.map(c => `<li>${c}</li>`).join("")}</ul>
+  </div>`;
+
+document.getElementById("totals").innerHTML = TOTALS.map(t => `
+  <tr><td><b>${t.t}</b>${t.n ? `<div class="small muted">${t.n}</div>` : ""}</td><td class="v">${t.v}</td></tr>`).join("");
+
+document.getElementById("reco").innerHTML = RECOMMENDATION.map(r => `<li>${r}</li>`).join("");
+document.getElementById("call").innerHTML = CALL_SCRIPT.map(c => `<li>${c}</li>`).join("");
+
+paint();
+</script>
+</body>
+</html>
