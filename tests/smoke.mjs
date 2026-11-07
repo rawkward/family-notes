@@ -98,7 +98,7 @@ const a = await bootDevice();
 const doc = a.document;
 const q = (sel) => doc.querySelectorAll(sel);
 
-check("данные с сервера развернулись: 8 групп, 28 пунктов", q(".qcard").length === 8 && q(".qitem").length === 28);
+check("данные с сервера развернулись: 8 групп, 28 пунктов", q("#quests .qcard").length === 8 && q("#quests .qitem").length === 28);
 check("прогресс на нуле", doc.getElementById("done-num").textContent === "0");
 check("задач бота = 4, одна на паузе", q(".job").length === 4 && q(".st.paused").length === 1);
 check("дат = 4", q(".date").length === 4);
@@ -120,7 +120,7 @@ check("ошибок JS нет", a.errors.length === 0);
 if (a.errors.length) console.log(a.errors.slice(0, 4));
 
 /* ─── отметка уходит на сервер ─── */
-const firstBox = doc.querySelector(".qitem input[type=checkbox]");
+const firstBox = doc.querySelector("#quests .qitem input[type=checkbox]");
 firstBox.checked = true;
 firstBox.dispatchEvent(new a.window.Event("change"));
 await settle();
@@ -128,7 +128,7 @@ check("отметка сохранилась на сервере", server.data.q
 check("прогресс стал 1", doc.getElementById("done-num").textContent === "1");
 
 /* ─── добавление пункта из интерфейса ─── */
-const firstCard = doc.querySelector(".qcard");
+const firstCard = doc.querySelector("#quests .qcard");
 firstCard.querySelector(".addbtn").click();
 await settle(2);
 let form = firstCard.querySelector(".inline");
@@ -139,10 +139,10 @@ form.dispatchEvent(new a.window.Event("submit", { cancelable: true, bubbles: tru
 await settle();
 const added = server.data.quests[0].items.at(-1);
 check("пункт добавился на сервере", added.t === "Новый пункт из теста" && added.n === "с уточнением");
-check("пункт появился в разметке", q(".qitem").length === 29 && doc.body.textContent.includes("Новый пункт из теста"));
+check("пункт появился в разметке", q("#quests .qitem").length === 29 && doc.body.textContent.includes("Новый пункт из теста"));
 
 /* ─── правка пункта ─── */
-const targetRow = [...q(".qitem")].find((r) => r.dataset.id === added.id);
+const targetRow = [...q("#quests .qitem")].find((r) => r.dataset.id === added.id);
 const editBtn = [...targetRow.querySelectorAll(".mini")].find((b) => b.title === "Изменить пункт");
 editBtn.click();
 await settle(2);
@@ -173,11 +173,66 @@ await settle();
 check("регулярное дело добавилось", server.data.regular.some((r) => r.title === "Полить лиану"));
 check("в разметке 4 регулярных дела", q(".reg .r").length === 4);
 
+/* ─── чек-лист ─── */
+doc.querySelector('[data-view="checklist"]').click();
+check("вкладка «Чек-лист» открывается", doc.getElementById("v-checklist").classList.contains("on"));
+check("адрес меняется на #checklist", a.window.location.hash === "#checklist");
+const checklistTotal = server.data.checklists.reduce((n, l) => n + l.items.length, 0);
+check("на вкладке чек-листа два списка из стартовых данных", q("#checklists .qcard[data-list]").length === 2);
+check("счётчик отмеченного на нуле", doc.getElementById("cl-done-num").textContent === "0" &&
+  doc.getElementById("cl-done-of").textContent === "из " + checklistTotal + " отмечено");
+
+const clFirstBox = doc.querySelector("#checklists .qitem input[type=checkbox]");
+clFirstBox.checked = true;
+clFirstBox.dispatchEvent(new a.window.Event("change"));
+await settle();
+check("отметка пункта чек-листа уходит на сервер", server.data.checklists[0].items[0].done === true);
+check("прогресс чек-листа стал 1", doc.getElementById("cl-done-num").textContent === "1");
+
+const clCard = doc.querySelector("#checklists .qcard[data-list]");
+clCard.querySelector(".addbtn").click();
+await settle(2);
+let clForm = clCard.querySelector(".inline");
+check("форма пункта чек-листа открылась", !!clForm);
+clForm.querySelector('[name="t"]').value = "Пункт чек-листа из теста";
+clForm.querySelector('[name="n"]').value = "уточнение";
+clForm.dispatchEvent(new a.window.Event("submit", { cancelable: true, bubbles: true }));
+await settle();
+const clAdded = server.data.checklists[0].items.at(-1);
+check("пункт чек-листа добавился на сервере", clAdded.t === "Пункт чек-листа из теста" && clAdded.n === "уточнение");
+check("пункт чек-листа появился в разметке", q("#checklists .qitem").length === checklistTotal + 1 &&
+  doc.body.textContent.includes("Пункт чек-листа из теста"));
+
+const clRow = [...q("#checklists .qitem")].find((r) => r.dataset.id === clAdded.id);
+[...clRow.querySelectorAll(".mini")].find((btn) => btn.title === "Изменить пункт").click();
+await settle(2);
+clForm = clRow.nextElementSibling;
+check("форма правки пункта чек-листа открылась", !!clForm && clForm.classList.contains("inline"));
+clForm.querySelector('[name="t"]').value = "Пункт чек-листа после правки";
+clForm.dispatchEvent(new a.window.Event("submit", { cancelable: true, bubbles: true }));
+await settle();
+check("правка пункта чек-листа дошла до сервера", server.data.checklists[0].items.at(-1).t === "Пункт чек-листа после правки");
+
+doc.getElementById("cl-add").click();
+await settle(2);
+clForm = doc.querySelector("#checklists .inline");
+check("форма нового списка открылась", !!clForm);
+clForm.querySelector('[name="title"]').value = "Новый список из теста";
+clForm.querySelector('[name="icon"]').value = "🧪";
+clForm.dispatchEvent(new a.window.Event("submit", { cancelable: true, bubbles: true }));
+await settle();
+check("новый список добавился на сервере", server.data.checklists.some((l) => l.title === "Новый список из теста"));
+check("в разметке три списка", q("#checklists .qcard[data-list]").length === 3);
+
 /* ─── второе устройство видит то же самое ─── */
 const b = await bootDevice();
-check("второе устройство видит тот же список", b.document.querySelectorAll(".qitem").length === 29);
+check("второе устройство видит тот же список", b.document.querySelectorAll("#quests .qitem").length === 29);
 check("второе устройство видит ту же отметку", b.document.getElementById("done-num").textContent === "1");
 check("второе устройство видит новое регулярное дело", b.document.querySelectorAll(".reg .r").length === 4);
+b.document.querySelector('[data-view="checklist"]').click();
+check("второе устройство видит добавленный пункт чек-листа", b.document.body.textContent.includes("Пункт чек-листа после правки"));
+check("второе устройство видит новый список", b.document.body.textContent.includes("Новый список из теста"));
+check("второе устройство видит отметку чек-листа", b.document.getElementById("cl-done-num").textContent === "1");
 check("второе устройство без ошибок JS", b.errors.length === 0);
 if (b.errors.length) console.log(b.errors.slice(0, 4));
 

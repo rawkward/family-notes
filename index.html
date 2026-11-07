@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Наши заметки — квесты, напоминания, автошкола</title>
+<title>Наши заметки — квесты, чек-лист, напоминания, автошкола</title>
 <link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -203,6 +203,7 @@ footer .wrap{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
   <span class="sync" id="sync"><i></i><span id="sync-txt">подключаюсь…</span></span>
   <nav class="tabs">
     <button class="tab on" data-view="quests">Квесты</button>
+    <button class="tab" data-view="checklist">Чек-лист</button>
     <button class="tab" data-view="reminders">Напоминания</button>
     <button class="tab" data-view="driving">Автошкола</button>
   </nav>
@@ -227,6 +228,28 @@ footer .wrap{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     </div>
 
     <div class="qgrid" id="quests"></div>
+  </div>
+</section>
+
+<!-- ══════════ ЧЕК-ЛИСТ ══════════ -->
+<section class="view" id="v-checklist">
+  <div class="wrap">
+    <div class="hero">
+      <div class="eyebrow">Общие списки</div>
+      <h1>Чек-лист</h1>
+      <p>Списки для сборов, покупок и дел перед поездкой. Добавляйте пункты, отмечайте сделанное, правьте формулировки — правки сразу видны на телефоне и на компьютере. Новый список — кнопка «＋ Список».</p>
+    </div>
+
+    <div class="progress-card">
+      <div class="num" id="cl-done-num">0</div>
+      <div class="small muted" id="cl-done-of">из 0 отмечено</div>
+      <div class="bar"><i id="cl-bar"></i></div>
+      <button class="ghost" id="cl-show-rest">Только невыполненное</button>
+      <button class="ghost" id="cl-add">＋ Список</button>
+      <button class="ghost" id="cl-reset">Сбросить отметки</button>
+    </div>
+
+    <div class="qgrid" id="checklists"></div>
   </div>
 </section>
 
@@ -328,7 +351,7 @@ footer .wrap{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 <script src="assets/api.js"></script>
 <script>
 /* ───────── тэбы ───────── */
-const views = ["quests", "reminders", "driving"];
+const views = ["quests", "checklist", "reminders", "driving"];
 function show(v) {
   if (!views.includes(v)) v = "quests";
   document.querySelectorAll(".view").forEach((s) => s.classList.toggle("on", s.id === "v-" + v));
@@ -376,11 +399,12 @@ function setSync(kind, text) {
   syncEl.title = kind === "ok" ? "Правки общие для всех устройств" : text;
 }
 
-let store = { quests: [], dates: [], regular: [] };
+let store = { quests: [], dates: [], regular: [], checklists: [] };
 let rev = -1;
 let token = localStorage.getItem(TOKEN_KEY) || "";
 let openForms = 0;
 let onlyRest = false;
+let clOnlyRest = false;
 let busy = false;
 
 function cacheSave() {
@@ -391,6 +415,7 @@ function cacheLoad() {
     const raw = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
     if (raw && raw.data) {
       store = raw.data;
+      if (!Array.isArray(store.checklists)) store.checklists = [];
       rev = typeof raw.rev === "number" ? raw.rev : -1;
       return true;
     }
@@ -410,12 +435,19 @@ function seedState() {
     })),
     dates: DATES.map((d, i) => ({ id: "date-" + i, m: d.m, day: d.day, title: d.title, who: d.who || "" })),
     regular: REGULAR.map((r, i) => ({ id: "reg-" + i, title: r.title, when: r.when || "", note: r.note || "", buy: r.buy || "" })),
+    checklists: CHECKLISTS.map((list) => ({
+      id: list.id,
+      title: list.title,
+      icon: list.icon,
+      items: list.items.map((it, i) => ({ id: list.id + "-" + i, t: it.t, n: it.n || "", done: false })),
+    })),
   };
 }
 
 function applyRemote(payload) {
   if (!payload || !payload.data) return false;
   store = payload.data;
+  if (!Array.isArray(store.checklists)) store.checklists = [];
   rev = payload.rev;
   cacheSave();
   renderAll();
@@ -432,6 +464,11 @@ function handleApiError(err, quiet) {
     return false;
   }
   if (status === 409) {
+    refresh({ quiet: true });
+    return false;
+  }
+  if (status === 422) {
+    if (!quiet) toast("Сервер не принял правку");
     refresh({ quiet: true });
     return false;
   }
@@ -684,15 +721,191 @@ function paint() {
   $("#done-of").textContent = "из " + total + " сделано";
   $("#bar").style.width = total ? (done / total) * 100 + "%" : "0%";
 
-  document.querySelectorAll(".qitem").forEach((el) => {
+  document.querySelectorAll("#quests .qitem").forEach((el) => {
     const card = el.closest(".qcard");
     const group = store.quests.find((g) => g.id === (card && card.dataset.group));
     const item = group && group.items.find((i) => i.id === el.dataset.id);
     el.style.display = onlyRest && item && item.done ? "none" : "";
   });
-  document.querySelectorAll(".qcard").forEach((card) => {
+  document.querySelectorAll("#quests .qcard").forEach((card) => {
     const any = [...card.querySelectorAll(".qitem")].some((el) => el.style.display !== "none");
     card.style.display = any || !onlyRest ? "" : "none";
+  });
+}
+
+/* ───────── рендер: чек-лист ───────── */
+function renderChecklists() {
+  const grid = $("#checklists");
+  grid.textContent = "";
+  if (!store.checklists.length) {
+    const hint = node("div", "qcard");
+    hint.appendChild(node("p", "muted small", "Пока пусто. Нажмите „＋ Список“ и назовите его — например, „Сборы в Китай“."));
+    grid.appendChild(hint);
+  } else {
+    store.checklists.forEach((list) => grid.appendChild(checklistCard(list)));
+  }
+  paintChecklists();
+}
+
+function checklistCard(list) {
+  const card = node("div", "qcard");
+  card.dataset.list = list.id;
+
+  const head = node("header");
+  head.appendChild(node("span", "ic", list.icon));
+  head.appendChild(node("h3", "", list.title));
+  const cnt = node("span", "cnt");
+  cnt.setAttribute("data-cl-cnt", list.id);
+  head.appendChild(cnt);
+  const act = node("span", "rowact");
+  act.appendChild(iconBtn("✎", "Переименовать список", () => openChecklistForm(list)));
+  act.appendChild(iconBtn("✕", "Удалить список", () => {
+    if (!confirm("Удалить список «" + list.title + "» со всеми пунктами?")) return;
+    sendOps([{ type: "cl.del", id: list.id }]);
+  }));
+  head.appendChild(act);
+  card.appendChild(head);
+
+  list.items.forEach((item) => card.appendChild(checklistItemRow(item)));
+
+  const add = node("button", "addbtn", "＋ пункт");
+  add.type = "button";
+  add.addEventListener("click", () => openAddChecklistItemForm(card, list, add));
+  card.appendChild(add);
+  return card;
+}
+
+function checklistItemRow(item) {
+  const row = node("div", "qitem" + (item.done ? " done" : ""));
+  row.dataset.id = item.id;
+
+  const cb = node("input");
+  cb.type = "checkbox";
+  cb.checked = !!item.done;
+  function toggle(next) {
+    sendOps([{ type: "cl.item.toggle", id: item.id, done: next }]);
+  }
+  cb.addEventListener("change", () => toggle(cb.checked));
+
+  const txt = node("span", "txt", item.t);
+  if (item.n) txt.appendChild(node("small", "", item.n));
+  txt.addEventListener("click", () => {
+    cb.checked = !cb.checked;
+    row.classList.toggle("done", cb.checked);
+    toggle(cb.checked);
+  });
+
+  const act = node("span", "rowact");
+  act.appendChild(iconBtn("✎", "Изменить пункт", () => openChecklistItemForm(item, row)));
+  act.appendChild(iconBtn("✕", "Удалить пункт", () => {
+    if (!confirm("Удалить пункт «" + item.t + "»?")) return;
+    sendOps([{ type: "cl.item.del", id: item.id }]);
+  }));
+
+  row.append(cb, txt, act);
+  return row;
+}
+
+function openChecklistItemForm(item, row) {
+  if (row.nextElementSibling && row.nextElementSibling.classList.contains("inline")) return;
+  row.style.display = "none";
+  openForms++;
+  const form = buildForm(
+    [
+      { name: "t", label: "Пункт", value: item.t, maxlength: 300 },
+      { name: "n", label: "Уточнение (необязательно)", value: item.n || "", maxlength: 800 },
+    ],
+    {
+      onCancel: () => { form.remove(); row.style.display = ""; openForms--; },
+      onSubmit: (v) => {
+        if (!v.t.trim()) { toast("Пустой пункт не сохраню"); return; }
+        form.remove();
+        row.style.display = "";
+        openForms--;
+        sendOps([{ type: "cl.item.edit", id: item.id, text: v.t, note: v.n }]);
+      },
+    },
+  );
+  row.after(form);
+  form.querySelector("input").focus();
+}
+
+function openAddChecklistItemForm(card, list, addBtn) {
+  const existing = card.querySelector(".inline");
+  if (existing) { existing.querySelector("input").focus(); return; }
+  openForms++;
+  const form = buildForm(
+    [
+      { name: "t", label: "Новый пункт", placeholder: "что взять или сделать", maxlength: 300 },
+      { name: "n", label: "Уточнение (необязательно)", placeholder: "детали, магазин, ссылка", maxlength: 800 },
+    ],
+    {
+      submit: "Добавить",
+      onCancel: () => { form.remove(); openForms--; },
+      onSubmit: (v) => {
+        if (!v.t.trim()) { toast("Пустой пункт не сохраню"); return; }
+        form.remove();
+        openForms--;
+        sendOps([{ type: "cl.item.add", list: list.id, text: v.t, note: v.n }]);
+      },
+    },
+  );
+  addBtn.before(form);
+  form.querySelector("input").focus();
+}
+
+function openChecklistForm(list) {
+  const grid = $("#checklists");
+  const existing = grid.querySelector(":scope > .inline");
+  if (existing) { existing.querySelector("input").focus(); return; }
+  openForms++;
+  const form = buildForm(
+    [
+      { name: "title", label: list ? "Название списка" : "Новый список", value: list ? list.title : "", placeholder: "например, Сборы в Китай", maxlength: 300 },
+      { name: "icon", label: "Значок", value: list ? list.icon : "✅", maxlength: 8 },
+    ],
+    {
+      submit: list ? "Сохранить" : "Добавить",
+      onCancel: () => { form.remove(); openForms--; },
+      onSubmit: (v) => {
+        if (!v.title.trim()) { toast("Название не может быть пустым"); return; }
+        form.remove();
+        openForms--;
+        sendOps([
+          list
+            ? { type: "cl.edit", id: list.id, title: v.title, icon: v.icon }
+            : { type: "cl.add", title: v.title, icon: v.icon },
+        ]);
+      },
+    },
+  );
+  grid.prepend(form);
+  form.querySelector("input").focus();
+}
+
+function paintChecklists() {
+  let done = 0;
+  let total = 0;
+  store.checklists.forEach((list) => {
+    const d = list.items.filter((i) => i.done).length;
+    total += list.items.length;
+    done += d;
+    const cnt = document.querySelector('[data-cl-cnt="' + list.id + '"]');
+    if (cnt) cnt.textContent = d + "/" + list.items.length;
+  });
+  $("#cl-done-num").textContent = done;
+  $("#cl-done-of").textContent = "из " + total + " отмечено";
+  $("#cl-bar").style.width = total ? (done / total) * 100 + "%" : "0%";
+
+  document.querySelectorAll("#checklists .qitem").forEach((el) => {
+    const card = el.closest(".qcard");
+    const list = store.checklists.find((l) => l.id === (card && card.dataset.list));
+    const item = list && list.items.find((i) => i.id === el.dataset.id);
+    el.style.display = clOnlyRest && item && item.done ? "none" : "";
+  });
+  document.querySelectorAll("#checklists .qcard[data-list]").forEach((card) => {
+    const any = [...card.querySelectorAll(".qitem")].some((el) => el.style.display !== "none");
+    card.style.display = any || !clOnlyRest ? "" : "none";
   });
 }
 
@@ -946,6 +1159,7 @@ function renderDriving() {
 /* ───────── общий рендер ───────── */
 function renderAll() {
   renderQuests();
+  renderChecklists();
   renderDates();
   renderRegular();
 }
@@ -996,6 +1210,17 @@ $("#add-regular").addEventListener("click", () => openRegularForm(null));
 $("#reset").addEventListener("click", () => {
   if (!confirm("Снять все отметки? Галочки исчезнут у всех, на всех устройствах.")) return;
   sendOps([{ type: "quests.reset" }]);
+});
+
+$("#cl-show-rest").addEventListener("click", (e) => {
+  clOnlyRest = !clOnlyRest;
+  e.currentTarget.textContent = clOnlyRest ? "Показать все" : "Только невыполненное";
+  paintChecklists();
+});
+$("#cl-add").addEventListener("click", () => openChecklistForm(null));
+$("#cl-reset").addEventListener("click", () => {
+  if (!confirm("Снять отметки в чек-листе? Галочки исчезнут у всех, на всех устройствах.")) return;
+  sendOps([{ type: "cl.reset" }]);
 });
 
 /* ───────── старт ───────── */
