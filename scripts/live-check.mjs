@@ -84,8 +84,8 @@ check("hash переключился на #checklist", window.location.hash === 
 
 const clCards = [...document.querySelectorAll("#checklists .qcard[data-list]")];
 const clItems = [...document.querySelectorAll("#checklists .qitem")];
-check("в чек-листе ровно 2 списка", clCards.length === 2);
-check("в списках не меньше 15 пунктов суммарно", clItems.length >= 15);
+check("в чек-листе ровно 1 список", clCards.length === 1);
+check("в списке 5 пунктов", clItems.length === 5);
 check("у каждого списка есть непустое название",
   clCards.every((card) => (card.querySelector("header h3")?.textContent || "").trim().length > 0));
 check("ни у одного пункта нет пустого текста",
@@ -172,12 +172,12 @@ const finalState = await waitFor(async () => {
   const s = await getState();
   const list = s.data.checklists.find((l) => l.id === clListId);
   const testGone = !s.data.checklists.some((l) => l.items.some((i) => (i.t || "").includes("Тестовый пункт")));
-  return !!(list && list.items.length === 16 && testGone) && s;
+  return !!(list && list.items.length === 5 && testGone) && s;
 }, 24);
 const final = finalState || await getState();
 const byTitle = (title) => (final.data.checklists.find((l) => l.title === title) || { items: [] }).items.length;
-check("в состоянии снова 16 + 5 пунктов",
-  byTitle("Сборы в Китай") === 16 && byTitle("Покупки домой") === 5);
+check("в состоянии один список и снова 5 пунктов",
+  final.data.checklists.length === 1 && byTitle("Покупки домой") === 5);
 check("тестового текста в состоянии нет",
   !final.data.checklists.some((l) => l.items.some((i) => (i.t || "").includes("Тестовый пункт"))));
 

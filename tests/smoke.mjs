@@ -178,7 +178,8 @@ doc.querySelector('[data-view="checklist"]').click();
 check("вкладка «Чек-лист» открывается", doc.getElementById("v-checklist").classList.contains("on"));
 check("адрес меняется на #checklist", a.window.location.hash === "#checklist");
 const checklistTotal = server.data.checklists.reduce((n, l) => n + l.items.length, 0);
-check("на вкладке чек-листа два списка из стартовых данных", q("#checklists .qcard[data-list]").length === 2);
+check("на вкладке чек-листа один список из стартовых данных", q("#checklists .qcard[data-list]").length === 1);
+check("в стартовом списке 5 пунктов", q("#checklists .qitem").length === 5);
 check("счётчик отмеченного на нуле", doc.getElementById("cl-done-num").textContent === "0" &&
   doc.getElementById("cl-done-of").textContent === "из " + checklistTotal + " отмечено");
 
@@ -222,7 +223,7 @@ clForm.querySelector('[name="icon"]').value = "🧪";
 clForm.dispatchEvent(new a.window.Event("submit", { cancelable: true, bubbles: true }));
 await settle();
 check("новый список добавился на сервере", server.data.checklists.some((l) => l.title === "Новый список из теста"));
-check("в разметке три списка", q("#checklists .qcard[data-list]").length === 3);
+check("в разметке два списка", q("#checklists .qcard[data-list]").length === 2);
 
 /* ─── второе устройство видит то же самое ─── */
 const b = await bootDevice();
