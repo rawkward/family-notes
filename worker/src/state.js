@@ -1,4 +1,4 @@
-// Чистая логика общего состояния заметок (квесты, чек-листы, даты, регулярные дела):
+// Чистая логика общего состояния заметок (квесты, даты, регулярные дела):
 // нормализация и применение операций. Файл не трогает сеть и БД — его же гоняют тесты.
 
 export class ValidationError extends Error {
@@ -13,7 +13,6 @@ const LIMITS = {
   text: 300,
   note: 800,
   groups: 80,
-  checklists: 40,
   items: 400,
   dates: 200,
   regular: 200,
@@ -38,7 +37,7 @@ function intIn(value, min, max, field) {
 }
 
 export function emptyState() {
-  return { quests: [], dates: [], regular: [], checklists: [] };
+  return { quests: [], dates: [], regular: [] };
 }
 
 function clone(state) {
@@ -67,19 +66,6 @@ function normalizeGroup(raw) {
     title,
     icon: text(group.icon, 8) || "📌",
     items: items.slice(0, LIMITS.items).map((item) => normalizeItem(item, "itm")),
-  };
-}
-
-function normalizeChecklist(raw) {
-  const list = raw && typeof raw === "object" ? raw : {};
-  const title = text(list.title);
-  if (!title) throw new ValidationError("empty_checklist", [{ field: "title", message: "пустой список" }]);
-  const items = Array.isArray(list.items) ? list.items : [];
-  return {
-    id: typeof list.id === "string" && list.id ? list.id.slice(0, 40) : newId("lst"),
-    title,
-    icon: text(list.icon, 8) || "✅",
-    items: items.slice(0, LIMITS.items).map((item) => normalizeItem(item, "ltm")),
   };
 }
 
@@ -114,12 +100,10 @@ export function normalizeState(raw) {
   const quests = Array.isArray(state.quests) ? state.quests : [];
   const dates = Array.isArray(state.dates) ? state.dates : [];
   const regular = Array.isArray(state.regular) ? state.regular : [];
-  const checklists = Array.isArray(state.checklists) ? state.checklists : [];
   return {
     quests: quests.slice(0, LIMITS.groups).map(normalizeGroup),
     dates: dates.slice(0, LIMITS.dates).map(normalizeDate),
     regular: regular.slice(0, LIMITS.regular).map(normalizeRegular),
-    checklists: checklists.slice(0, LIMITS.checklists).map(normalizeChecklist),
   };
 }
 
@@ -137,20 +121,6 @@ function findItem(state, itemId) {
   throw new ValidationError("item_not_found", [{ field: "id", message: "пункт не найден" }]);
 }
 
-function findChecklist(state, listId) {
-  const list = state.checklists.find((l) => l.id === listId);
-  if (!list) throw new ValidationError("checklist_not_found", [{ field: "id", message: "список не найден" }]);
-  return list;
-}
-
-function findChecklistItem(state, itemId) {
-  for (const list of state.checklists) {
-    const item = list.items.find((i) => i.id === itemId);
-    if (item) return { list, item };
-  }
-  throw new ValidationError("cl_item_not_found", [{ field: "id", message: "пункт списка не найден" }]);
-}
-
 function uniqueId(prefix, used) {
   let id = newId(prefix);
   while (used.has(id)) id = newId(prefix);
@@ -163,7 +133,7 @@ export function applyOps(state, ops) {
   if (ops.length > LIMITS.ops) throw new ValidationError("too_many_ops");
 
   const next = clone(state);
-  if (!Array.isArray(next.checklists)) next.checklists = [];
+  delete next.checklists;
   const usedIds = new Set();
   for (const group of next.quests) {
     usedIds.add(group.id);
@@ -171,10 +141,6 @@ export function applyOps(state, ops) {
   }
   for (const date of next.dates) usedIds.add(date.id);
   for (const reg of next.regular) usedIds.add(reg.id);
-  for (const list of next.checklists) {
-    usedIds.add(list.id);
-    for (const item of list.items) usedIds.add(item.id);
-  }
 
   for (const raw of ops) {
     const op = raw && typeof raw === "object" ? raw : {};
@@ -260,60 +226,6 @@ export function applyOps(state, ops) {
         const before = next.regular.length;
         next.regular = next.regular.filter((r) => r.id !== op.id);
         if (next.regular.length === before) throw new ValidationError("regular_not_found");
-        break;
-      }
-      case "cl.add": {
-        if (next.checklists.length >= LIMITS.checklists) throw new ValidationError("too_many_checklists");
-        const title = text(op.title);
-        if (!title) throw new ValidationError("empty_checklist", [{ field: "title", message: "пустое название" }]);
-        next.checklists.push({ id: uniqueId("lst", usedIds), title, icon: text(op.icon, 8) || "✅", items: [] });
-        break;
-      }
-      case "cl.edit": {
-        const list = findChecklist(next, op.id);
-        const title = text(op.title);
-        if (!title) throw new ValidationError("empty_checklist", [{ field: "title", message: "пустое название" }]);
-        list.title = title;
-        list.icon = text(op.icon, 8) || "✅";
-        break;
-      }
-      case "cl.del": {
-        const list = findChecklist(next, op.id);
-        next.checklists = next.checklists.filter((l) => l.id !== list.id);
-        break;
-      }
-      case "cl.item.add": {
-        const list = findChecklist(next, op.list);
-        if (list.items.length >= LIMITS.items) throw new ValidationError("checklist_full");
-        const id = uniqueId("ltm", usedIds);
-        list.items.push(normalizeItem({ id, t: op.text, n: op.note }, "ltm"));
-        break;
-      }
-      case "cl.item.edit": {
-        const { item } = findChecklistItem(next, op.id);
-        const title = text(op.text);
-        if (!title) throw new ValidationError("empty_item", [{ field: "text", message: "пустой текст" }]);
-        item.t = title;
-        item.n = text(op.note, LIMITS.note);
-        break;
-      }
-      case "cl.item.del": {
-        const { list, item } = findChecklistItem(next, op.id);
-        list.items = list.items.filter((i) => i.id !== item.id);
-        break;
-      }
-      case "cl.item.toggle": {
-        const { item } = findChecklistItem(next, op.id);
-        item.done = typeof op.done === "boolean" ? op.done : !item.done;
-        break;
-      }
-      case "cl.reset": {
-        if (op.id) {
-          const list = findChecklist(next, op.id);
-          for (const item of list.items) item.done = false;
-        } else {
-          for (const list of next.checklists) for (const item of list.items) item.done = false;
-        }
         break;
       }
       default:

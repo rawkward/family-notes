@@ -113,7 +113,9 @@ async function handleLogin(request, env) {
 async function handleGetState(env) {
   const row = await readRow(env);
   if (!row) return json({ rev: 0, updated_at: 0, data: null });
-  return json({ rev: row.rev, updated_at: row.updated_at, data: JSON.parse(row.json) });
+  const data = JSON.parse(row.json);
+  delete data.checklists;
+  return json({ rev: row.rev, updated_at: row.updated_at, data });
 }
 
 async function handleInit(request, env) {

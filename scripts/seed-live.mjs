@@ -9,7 +9,7 @@ const API = "https://family-notes-api.rawkward.workers.dev";
 const password = process.argv[2] || "kisa2026";
 
 const source = fs.readFileSync(path.join(root, "assets", "notes.js"), "utf8");
-const { QUESTS, DATES, REGULAR, CHECKLISTS } = new Function(source + "\nreturn { QUESTS, DATES, REGULAR, CHECKLISTS };")();
+const { QUESTS, DATES, REGULAR } = new Function(source + "\nreturn { QUESTS, DATES, REGULAR };")();
 
 const data = {
   quests: QUESTS.map((g) => ({
@@ -20,12 +20,6 @@ const data = {
   })),
   dates: DATES.map((d, i) => ({ id: "date-" + i, m: d.m, day: d.day, title: d.title, who: d.who || "" })),
   regular: REGULAR.map((r, i) => ({ id: "reg-" + i, title: r.title, when: r.when || "", note: r.note || "", buy: r.buy || "" })),
-  checklists: CHECKLISTS.map((list) => ({
-    id: list.id,
-    title: list.title,
-    icon: list.icon,
-    items: list.items.map((it, i) => ({ id: list.id + "-" + i, t: it.t, n: it.n || "", done: false })),
-  })),
 };
 
 const login = await fetch(API + "/api/login", {
