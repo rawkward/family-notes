@@ -177,6 +177,20 @@ check("в разметке 4 регулярных дела", q(".reg .r").length
 check("вкладки «Чек-лист» нет", !doc.querySelector('[data-view="checklist"]'));
 check("секции чек-листа нет", !doc.getElementById("v-checklist"));
 
+/* ─── панель быстрого перехода по группам ─── */
+check("чипов столько же, сколько карточек групп (8)", q("#qnav .qnavbtn").length === 8 && q("#qnav .qnavbtn").length === q("#quests .qcard").length);
+check("названия чипов совпадают с названиями групп по порядку", [...q("#qnav .qnavbtn .tt")].map((e) => e.textContent).join("|") === [...q("#quests .qcard h3")].map((e) => e.textContent).join("|"));
+const firstChip = doc.querySelector("#qnav .qnavbtn");
+let chipClickThrew = false;
+try { firstChip.click(); } catch (e) { chipClickThrew = true; }
+check("клик по первому чипу не бросает исключений", !chipClickThrew);
+check("после клика активен именно первый чип", firstChip.classList.contains("on") && q("#qnav .qnavbtn.on").length === 1);
+doc.getElementById("show-rest").click();
+await settle(2);
+doc.getElementById("show-rest").click();
+await settle(2);
+check("после фильтра «Только невыполненное» и раскрытия чипы не пропадают", q("#qnav .qnavbtn").length === 8 && [...q("#qnav .qnavbtn")].every((b) => b.style.display !== "none"));
+
 /* ─── второе устройство видит то же самое ─── */
 const b = await bootDevice();
 check("второе устройство видит тот же список", b.document.querySelectorAll("#quests .qitem").length === 29);

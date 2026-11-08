@@ -61,6 +61,16 @@ section.view.on{display:block}
 .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#65a30d,#4d7c0f);border-radius:999px;transition:width .35s}
 .ghost{background:none;border:1px solid var(--line);border-radius:999px;padding:7px 14px;font:inherit;font-size:.83rem;font-weight:600;color:var(--muted);cursor:pointer}
 .ghost:hover{color:var(--ink);border-color:#d6c9b6}
+.qnav{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:-14px 0 22px}
+.qnav .lbl{font-size:.74rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-right:2px}
+.qnavbtn{display:inline-flex;align-items:center;gap:6px;max-width:100%;background:none;border:1px solid var(--line);border-radius:999px;padding:7px 13px;font:inherit;font-size:.83rem;font-weight:600;color:var(--muted);cursor:pointer;transition:.15s}
+.qnavbtn .ic{font-size:.95rem;line-height:1;flex:0 0 auto}
+.qnavbtn .tt{min-width:0;max-width:15ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qnavbtn .c{font-size:.72rem;color:var(--muted);background:var(--bg2);border-radius:999px;padding:1px 7px;flex:0 0 auto}
+.qnavbtn:hover{color:var(--ink);border-color:#d6c9b6}
+.qnavbtn.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.qnavbtn.on .c{background:rgba(255,255,255,.18);color:#fff}
+.qcard{scroll-margin-top:88px}
 .primary{background:var(--ink);color:#fff;border:1px solid var(--ink);border-radius:9px;padding:8px 14px;font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
 .primary:hover{background:#000}
 .primary:disabled{opacity:.6;cursor:default}
@@ -226,6 +236,8 @@ footer .wrap{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
       <button class="ghost" id="reset">Сбросить отметки</button>
     </div>
 
+    <div class="qnav" id="qnav"></div>
+
     <div class="qgrid" id="quests"></div>
   </div>
 </section>
@@ -381,6 +393,7 @@ let rev = -1;
 let token = localStorage.getItem(TOKEN_KEY) || "";
 let openForms = 0;
 let onlyRest = false;
+let qnavActive = "";
 let busy = false;
 
 function cacheSave() {
@@ -482,10 +495,49 @@ async function sendOps(ops) {
 }
 
 /* ───────── рендер: квесты ───────── */
+function renderQnav() {
+  const nav = $("#qnav");
+  nav.textContent = "";
+  if (!store.quests.length) {
+    nav.style.display = "none";
+    return;
+  }
+  nav.style.display = "";
+  nav.appendChild(node("span", "lbl", "Группы:"));
+  store.quests.forEach((group) => {
+    const btn = node("button", "qnavbtn");
+    btn.type = "button";
+    btn.dataset.jump = group.id;
+    btn.appendChild(node("span", "ic", group.icon));
+    btn.appendChild(node("span", "tt", group.title));
+    const done = group.items.filter((i) => i.done).length;
+    btn.appendChild(node("span", "c", done + "/" + group.items.length));
+    btn.addEventListener("click", () => scrollToGroup(group.id));
+    btn.classList.toggle("on", group.id === qnavActive);
+    nav.appendChild(btn);
+  });
+}
+
+function scrollToGroup(id) {
+  const card = document.querySelector('#quests .qcard[data-group="' + id + '"]');
+  if (!card) return;
+  qnavActive = id;
+  document.querySelectorAll("#qnav .qnavbtn").forEach((b) => b.classList.toggle("on", b.dataset.jump === id));
+  const topbar = document.querySelector(".topbar");
+  const offset = (topbar ? topbar.offsetHeight : 0) + 14;
+  const top = card.getBoundingClientRect().top + window.pageYOffset - offset;
+  try {
+    window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+  } catch (e) {
+    try { window.scrollTo(0, top); } catch (e2) {}
+  }
+}
+
 function renderQuests() {
   const grid = $("#quests");
   grid.textContent = "";
   store.quests.forEach((group) => grid.appendChild(questCard(group)));
+  renderQnav();
   paint();
 }
 
@@ -698,6 +750,10 @@ function paint() {
   document.querySelectorAll("#quests .qcard").forEach((card) => {
     const any = [...card.querySelectorAll(".qitem")].some((el) => el.style.display !== "none");
     card.style.display = any || !onlyRest ? "" : "none";
+  });
+  document.querySelectorAll("#qnav .qnavbtn").forEach((chip) => {
+    const card = document.querySelector('#quests .qcard[data-group="' + chip.dataset.jump + '"]');
+    chip.style.display = card && card.style.display === "none" ? "none" : "";
   });
 }
 
