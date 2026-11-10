@@ -120,16 +120,6 @@ section.view.on{display:block}
 .st{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:2px 8px}
 .st.on{background:var(--ok-soft);color:var(--ok)}
 .st.paused{background:var(--warn-soft);color:var(--warn)}
-.job .to{font-size:.68rem;font-weight:700;letter-spacing:.04em;color:var(--muted);background:var(--bg2);border-radius:999px;padding:2px 8px}
-
-.pings{display:grid;gap:10px;margin-bottom:34px}
-.ping{display:flex;gap:10px;align-items:center;min-width:0;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
-.ping .pat{flex:0 0 auto;white-space:nowrap;font-family:var(--serif);font-size:.86rem;font-weight:700;color:var(--muted)}
-.ping .who{flex:0 0 auto;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#94340a;background:var(--accent-soft);border-radius:999px;padding:2px 8px}
-.ping .txt{flex:1 1 auto;min-width:0;font-size:.9rem;overflow-wrap:anywhere}
-.ping.done .txt{color:#a79e92;text-decoration:line-through}
-.ping .rowact{margin-left:auto;flex:0 0 auto;opacity:.85}
-.pings .empty{padding:10px 2px;font-size:.85rem;color:var(--muted)}
 
 .dates{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-bottom:34px}
 .date{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;position:relative}
@@ -213,9 +203,6 @@ footer .wrap{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
   .job{flex-direction:column;gap:6px}
   .job .t{display:flex;gap:8px;align-items:baseline}
   .job .t small{margin:0}
-  .ping{flex-wrap:wrap}
-  .ping .txt{flex-basis:100%;order:3}
-  .ping .rowact{margin-left:auto}
 }
 </style>
 </head>
@@ -261,11 +248,8 @@ footer .wrap{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     <div class="hero">
       <div class="eyebrow">Что и когда</div>
       <h1>Напоминания</h1>
-      <p>Часть напоминаний бот теперь присылает прямо сюда, в «Пришло от бота» — магний, железо, уши кошке. Даты и годовщины по-прежнему приходят сообщением в чат, а регулярные дела мы держим в голове и правим здесь. Правки общие для всех устройств.</p>
+      <p>Две части: то, что бот сам пишет в чат «Людское», и то, что мы держим в голове — даты и регулярные дела. Даты и дела правятся отсюда, правки общие для всех устройств.</p>
     </div>
-
-    <div class="blocktl"><h2>Пришло от бота</h2><span class="n">последние 20 · ✓ — сделано</span><button class="ghost" id="clear-pings">Очистить</button></div>
-    <div class="pings" id="pings"></div>
 
     <div class="blocktl"><h2>Бот присылает сам</h2><span class="n">4 задачи · живут в Hermes, здесь только показаны</span></div>
     <div class="jobs" id="jobs"></div>
@@ -404,7 +388,7 @@ function setSync(kind, text) {
   syncEl.title = kind === "ok" ? "Правки общие для всех устройств" : text;
 }
 
-let store = { quests: [], dates: [], regular: [], pings: [] };
+let store = { quests: [], dates: [], regular: [] };
 let rev = -1;
 let token = localStorage.getItem(TOKEN_KEY) || "";
 let openForms = 0;
@@ -439,7 +423,6 @@ function seedState() {
     })),
     dates: DATES.map((d, i) => ({ id: "date-" + i, m: d.m, day: d.day, title: d.title, who: d.who || "" })),
     regular: REGULAR.map((r, i) => ({ id: "reg-" + i, title: r.title, when: r.when || "", note: r.note || "", buy: r.buy || "" })),
-    pings: [],
   };
 }
 
@@ -795,62 +778,10 @@ function renderJobs() {
     const h4 = node("h4");
     h4.appendChild(node("code", "", j.name));
     h4.appendChild(node("span", "st " + j.status, j.status === "on" ? "работает" : "на паузе"));
-    if (j.to) h4.appendChild(node("span", "to", "→ " + j.to));
     body.appendChild(h4);
     body.appendChild(node("p", "", j.text));
     el.append(t, body);
     w.appendChild(el);
-  });
-}
-
-function formatPingAt(at) {
-  if (typeof at !== "string" || !at) return "";
-  const date = new Date(at);
-  if (Number.isNaN(date.getTime())) return "";
-  const msk = new Date(date.getTime() + 3 * 3600 * 1000);
-  const dd = String(msk.getUTCDate()).padStart(2, "0");
-  const mm = String(msk.getUTCMonth() + 1).padStart(2, "0");
-  const hh = String(msk.getUTCHours()).padStart(2, "0");
-  const mi = String(msk.getUTCMinutes()).padStart(2, "0");
-  return dd + "." + mm + " " + hh + ":" + mi;
-}
-
-function pingTime(p) {
-  if (!p.at) return -Infinity;
-  const ts = Date.parse(p.at);
-  return Number.isNaN(ts) ? -Infinity : ts;
-}
-
-function renderPings() {
-  const w = $("#pings");
-  if (!w) return;
-  w.textContent = "";
-  const pings = (Array.isArray(store.pings) ? store.pings : []).filter((p) => p && typeof p === "object");
-  if (!pings.length) {
-    w.appendChild(node("div", "empty", "пока пусто"));
-    return;
-  }
-  const sorted = [...pings].sort((a, b) => {
-    const ta = pingTime(a);
-    const tb = pingTime(b);
-    if (ta === tb) return 0;
-    return tb - ta;
-  }).slice(0, 20);
-  sorted.forEach((p) => {
-    const card = node("div", "ping" + (p.done ? " done" : ""));
-    card.dataset.id = p.id;
-    const when = formatPingAt(p.at);
-    if (when) card.appendChild(node("span", "pat", when));
-    if (p.who) card.appendChild(node("span", "who", p.who));
-    card.appendChild(node("span", "txt", p.text));
-    const act = node("span", "rowact");
-    act.appendChild(iconBtn("✓", p.done ? "Вернуть" : "Отметить сделанным", () => sendOps([{ type: "ping.done", id: p.id, done: !p.done }])));
-    act.appendChild(iconBtn("✕", "Удалить", () => {
-      if (!confirm("Удалить «" + p.text + "»?")) return;
-      sendOps([{ type: "ping.del", id: p.id }]);
-    }));
-    card.appendChild(act);
-    w.appendChild(card);
   });
 }
 
@@ -1076,7 +1007,6 @@ function renderDriving() {
 /* ───────── общий рендер ───────── */
 function renderAll() {
   renderQuests();
-  renderPings();
   renderDates();
   renderRegular();
 }
@@ -1124,10 +1054,6 @@ $("#show-rest").addEventListener("click", (e) => {
 $("#add-group").addEventListener("click", () => openGroupForm(null));
 $("#add-date").addEventListener("click", () => openDateForm(null));
 $("#add-regular").addEventListener("click", () => openRegularForm(null));
-$("#clear-pings").addEventListener("click", () => {
-  if (!confirm("Очистить все напоминания от бота? Это увидят все устройства.")) return;
-  sendOps([{ type: "pings.clear" }]);
-});
 $("#reset").addEventListener("click", () => {
   if (!confirm("Снять все отметки? Галочки исчезнут у всех, на всех устройствах.")) return;
   sendOps([{ type: "quests.reset" }]);

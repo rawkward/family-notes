@@ -119,32 +119,6 @@ check("форма пароля скрыта после входа", !doc.getElem
 check("ошибок JS нет", a.errors.length === 0);
 if (a.errors.length) console.log(a.errors.slice(0, 4));
 
-/* ─── напоминания от бота ─── */
-const oldPing = { id: "png_old", at: "2026-11-10T10:00:00+03:00", who: "киса", text: "Старое напоминание", done: false };
-const newPing = { id: "png_new", at: "2026-11-11T22:00:00+03:00", who: "котик", text: "Новое напоминание", done: false };
-server.data.pings = [oldPing, newPing];
-server.rev += 1;
-await a.window.refresh();
-await settle();
-const pingCards = [...q("#pings .ping")];
-check("во вкладке «Пришло от бота» 2 карточки", pingCards.length === 2);
-check("новое напоминание сверху", pingCards[0].textContent.includes("Новое напоминание") && pingCards[1].textContent.includes("Старое напоминание"));
-check("время показано по Москве как дд.мм чч:мм", pingCards[0].querySelector(".pat").textContent === "11.11 22:00");
-
-doc.querySelector('.tab[data-view="reminders"]').click();
-check("вкладка «Напоминания» открывается", doc.getElementById("v-reminders").classList.contains("on"));
-
-const magniyJob = [...q(".job")].find((j) => j.querySelector("code") && j.querySelector("code").textContent === "kisa-magniy");
-check("у kisa-magniy видна пометка «вкладка»", !!magniyJob && magniyJob.textContent.includes("вкладка"));
-
-const newCard = pingCards[0];
-const doneBtn = [...newCard.querySelectorAll(".mini")].find((b) => b.title === "Отметить сделанным");
-check("у карточки есть кнопка «Отметить сделанным»", !!doneBtn);
-doneBtn.click();
-await settle();
-check("✓ отправил ping.done на сервер", server.data.pings.find((p) => p.id === "png_new").done === true);
-check("сделанное напоминание зачёркнуто", doc.querySelector('.ping[data-id="png_new"]').classList.contains("done"));
-
 /* ─── отметка уходит на сервер ─── */
 const firstBox = doc.querySelector("#quests .qitem input[type=checkbox]");
 firstBox.checked = true;
