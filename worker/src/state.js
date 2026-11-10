@@ -16,6 +16,7 @@ const LIMITS = {
   items: 400,
   dates: 200,
   regular: 200,
+  pings: 60,
   ops: 100,
 };
 
@@ -37,7 +38,7 @@ function intIn(value, min, max, field) {
 }
 
 export function emptyState() {
-  return { quests: [], dates: [], regular: [] };
+  return { quests: [], dates: [], regular: [], pings: [] };
 }
 
 function clone(state) {
@@ -95,6 +96,30 @@ function normalizeRegular(raw) {
   };
 }
 
+function normalizePing(raw) {
+  const ping = raw && typeof raw === "object" ? raw : {};
+  const title = text(ping.text);
+  if (!title) throw new ValidationError("empty_ping", [{ field: "text", message: "пустое напоминание" }]);
+  return {
+    id: typeof ping.id === "string" && ping.id ? ping.id.slice(0, 40) : newId("png"),
+    at: typeof ping.at === "string" ? ping.at.trim() : "",
+    who: text(ping.who, 40),
+    text: title,
+    done: ping.done === true,
+  };
+}
+
+function normalizePings(raw) {
+  if (!Array.isArray(raw)) return [];
+  const out = [];
+  for (const item of raw) {
+    try {
+      out.push(normalizePing(item));
+    } catch (e) {}
+  }
+  return out.slice(-LIMITS.pings);
+}
+
 export function normalizeState(raw) {
   const state = raw && typeof raw === "object" ? raw : {};
   const quests = Array.isArray(state.quests) ? state.quests : [];
@@ -104,6 +129,7 @@ export function normalizeState(raw) {
     quests: quests.slice(0, LIMITS.groups).map(normalizeGroup),
     dates: dates.slice(0, LIMITS.dates).map(normalizeDate),
     regular: regular.slice(0, LIMITS.regular).map(normalizeRegular),
+    pings: normalizePings(state.pings),
   };
 }
 
@@ -134,6 +160,7 @@ export function applyOps(state, ops) {
 
   const next = clone(state);
   delete next.checklists;
+  if (!Array.isArray(next.pings)) next.pings = [];
   const usedIds = new Set();
   for (const group of next.quests) {
     usedIds.add(group.id);
@@ -141,6 +168,7 @@ export function applyOps(state, ops) {
   }
   for (const date of next.dates) usedIds.add(date.id);
   for (const reg of next.regular) usedIds.add(reg.id);
+  for (const ping of next.pings) if (ping && ping.id) usedIds.add(ping.id);
 
   for (const raw of ops) {
     const op = raw && typeof raw === "object" ? raw : {};
@@ -226,6 +254,27 @@ export function applyOps(state, ops) {
         const before = next.regular.length;
         next.regular = next.regular.filter((r) => r.id !== op.id);
         if (next.regular.length === before) throw new ValidationError("regular_not_found");
+        break;
+      }
+      case "ping.add": {
+        next.pings.push(normalizePing({ text: op.text, who: op.who, at: op.at, id: uniqueId("png", usedIds) }));
+        if (next.pings.length > LIMITS.pings) next.pings = next.pings.slice(-LIMITS.pings);
+        break;
+      }
+      case "ping.done": {
+        const ping = next.pings.find((p) => p.id === op.id);
+        if (!ping) throw new ValidationError("ping_not_found", [{ field: "id", message: "напоминание не найдено" }]);
+        ping.done = typeof op.done === "boolean" ? op.done : !ping.done;
+        break;
+      }
+      case "ping.del": {
+        const before = next.pings.length;
+        next.pings = next.pings.filter((p) => p.id !== op.id);
+        if (next.pings.length === before) throw new ValidationError("ping_not_found", [{ field: "id", message: "напоминание не найдено" }]);
+        break;
+      }
+      case "pings.clear": {
+        next.pings = [];
         break;
       }
       default:

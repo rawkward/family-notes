@@ -129,3 +129,94 @@ test("старые чек-листы в записи игнорируются б
 
   assert.throws(() => applyOps(base(), [{ type: "cl.add", title: "Сборы" }]), ValidationError);
 });
+
+test("старое состояние без pings нормализуется в пустой массив", () => {
+  const state = normalizeState({ quests: [], dates: [], regular: [] });
+  assert.deepEqual(state.pings, []);
+});
+
+test("pings без at и who не валят нормализацию, мусор отбрасывается", () => {
+  const state = normalizeState({
+    pings: [
+      { text: "Магний" },
+      { text: "Железо", who: "киса", at: "2026-11-11T22:00:00+03:00" },
+      { text: "" },
+      null,
+      "мусор",
+    ],
+  });
+  assert.equal(state.pings.length, 2);
+  assert.equal(state.pings[0].at, "");
+  assert.equal(state.pings[0].who, "");
+  assert.equal(state.pings[0].done, false);
+  assert.match(state.pings[0].id, /^png_/);
+});
+
+test("ping.add добавляет напоминание и обрезает текст", () => {
+  const next = applyOps(base(), [{
+    type: "ping.add",
+    text: "я".repeat(400),
+    who: "к".repeat(80),
+    at: "2026-11-11T22:00:00+03:00",
+  }]);
+  const ping = next.pings.at(-1);
+  assert.match(ping.id, /^png_/);
+  assert.equal(ping.done, false);
+  assert.equal(ping.text.length, 300);
+  assert.equal(ping.who.length, 40);
+  assert.equal(ping.at, "2026-11-11T22:00:00+03:00");
+});
+
+test("ping.add с пустым текстом отбивается ошибкой", () => {
+  assert.throws(() => applyOps(base(), [{ type: "ping.add", text: "   " }]), ValidationError);
+  assert.throws(() => applyOps(base(), [{ type: "ping.add" }]), ValidationError);
+});
+
+test("ping.done переключает и уважает явный done", () => {
+  let next = applyOps(base(), [{ type: "ping.add", text: "Магний" }]);
+  const id = next.pings[0].id;
+
+  next = applyOps(next, [{ type: "ping.done", id }]);
+  assert.equal(next.pings[0].done, true);
+
+  next = applyOps(next, [{ type: "ping.done", id, done: false }]);
+  assert.equal(next.pings[0].done, false);
+
+  next = applyOps(next, [{ type: "ping.done", id, done: true }]);
+  assert.equal(next.pings[0].done, true);
+
+  assert.throws(
+    () => applyOps(next, [{ type: "ping.done", id: "png_нет" }]),
+    (err) => err instanceof ValidationError && err.message === "ping_not_found",
+  );
+});
+
+test("ping.del удаляет, неизвестный id отбивается ошибкой", () => {
+  const added = applyOps(base(), [{ type: "ping.add", text: "Магний" }]);
+  const id = added.pings[0].id;
+  const removed = applyOps(added, [{ type: "ping.del", id }]);
+  assert.equal(removed.pings.length, 0);
+
+  assert.throws(
+    () => applyOps(added, [{ type: "ping.del", id: "png_нет" }]),
+    (err) => err instanceof ValidationError && err.message === "ping_not_found",
+  );
+});
+
+test("pings.clear очищает все напоминания", () => {
+  const added = applyOps(base(), [
+    { type: "ping.add", text: "Магний" },
+    { type: "ping.add", text: "Железо" },
+  ]);
+  const cleared = applyOps(added, [{ type: "pings.clear" }]);
+  assert.deepEqual(cleared.pings, []);
+});
+
+test("лимит pings: остаются только 60 самых новых", () => {
+  const ops = Array.from({ length: 65 }, (_, i) => ({ type: "ping.add", text: "p" + i }));
+  const next = applyOps(base(), ops);
+  assert.equal(next.pings.length, 60);
+  assert.equal(next.pings[0].text, "p5");
+  assert.equal(next.pings.at(-1).text, "p64");
+});
+
