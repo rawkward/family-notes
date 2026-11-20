@@ -130,12 +130,34 @@ section.view.on{display:block}
 .date .rowact{position:absolute;top:8px;right:8px}
 
 .reg{display:grid;gap:12px}
+.reggroup{display:grid;gap:10px}
+.reghead{display:flex;align-items:baseline;gap:8px;margin:6px 0 0}
+.reghead h3{margin:0;font-size:1rem}
+.reghead .rcnt{font-size:.74rem;color:var(--muted);font-weight:600;background:var(--bg2);border-radius:999px;padding:2px 9px}
 .reg .r{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;position:relative}
 .reg .r h4{margin:0 0 4px;font-family:var(--serif);font-size:1.02rem;padding-right:52px}
 .reg .r .when{font-size:.86rem;font-weight:600;color:var(--accent)}
 .reg .r p{margin:6px 0 0;font-size:.87rem;color:var(--muted)}
 .reg .r .buy{display:inline-block;margin-top:8px;font-size:.76rem;font-weight:600;background:var(--bg2);border-radius:999px;padding:3px 10px;color:var(--ink)}
 .reg .r .rowact{position:absolute;top:12px;right:12px}
+.st.tag{background:var(--bg2);color:var(--muted)}
+
+/* board */
+.board-actions{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+#board-forms .inline{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin-bottom:16px}
+.board{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;align-items:flex-start}
+.bcol{flex:1 0 210px;background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:10px;min-height:84px}
+.bcolhead{display:flex;align-items:baseline;gap:7px;margin:2px 4px 10px}
+.bcolhead h3{margin:0;font-size:.95rem;font-family:var(--sans);font-weight:700}
+.bcolhead .bcnt{margin-left:auto;font-size:.72rem;color:var(--muted);font-weight:600;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:1px 8px}
+.bcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:10px}
+.btop{display:flex;gap:6px;align-items:flex-start}
+.btitle{font-size:.92rem;font-weight:700;flex:1;overflow-wrap:anywhere}
+.bcard.done .btitle{color:#a79e92;text-decoration:line-through}
+.bnote{margin-top:4px;font-size:.8rem;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere}
+.bcard .st{display:inline-block;margin-top:7px;background:var(--bg2);color:var(--muted)}
+.bctl{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+.bctl select{border:1px solid var(--line);border-radius:8px;padding:5px 7px;font:inherit;font-size:.78rem;background:#fff;color:var(--ink);min-width:0;flex:1}
 
 /* driving */
 .intro-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 22px;margin-bottom:22px}
@@ -213,6 +235,7 @@ footer .wrap{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
   <span class="sync" id="sync"><i></i><span id="sync-txt">подключаюсь…</span></span>
   <nav class="tabs">
     <button class="tab on" data-view="quests">Квесты</button>
+    <button class="tab" data-view="board">Доска</button>
     <button class="tab" data-view="reminders">Напоминания</button>
     <button class="tab" data-view="driving">Автошкола</button>
   </nav>
@@ -239,6 +262,28 @@ footer .wrap{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     <div class="qnav" id="qnav"></div>
 
     <div class="qgrid" id="quests"></div>
+  </div>
+</section>
+
+<!-- ══════════ ДОСКА ══════════ -->
+<section class="view" id="v-board">
+  <div class="wrap">
+    <div class="hero">
+      <div class="eyebrow">Домашние дела</div>
+      <h1>Доска</h1>
+      <p>Сделано → в «Сделано», «в работе» → в «В работе», назначено Жене или Антону → к человеку, остальное лежит в бэклоге.</p>
+      <p class="small muted">Сделанное чистится раз в неделю по понедельникам: карточки из «Сделано» уезжают в архив.</p>
+    </div>
+
+    <div class="board-actions">
+      <button class="ghost" id="add-card">＋ Карточка</button>
+      <button class="ghost" id="from-quests">Из квестов</button>
+      <button class="ghost" id="from-reminders">Из напоминаний</button>
+      <button class="ghost" id="clear-done">Очистить сделанное</button>
+    </div>
+
+    <div id="board-forms"></div>
+    <div class="board" id="board"></div>
   </div>
 </section>
 
@@ -340,7 +385,7 @@ footer .wrap{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 <script src="assets/api.js"></script>
 <script>
 /* ───────── тэбы ───────── */
-const views = ["quests", "reminders", "driving"];
+const views = ["quests", "board", "reminders", "driving"];
 function show(v) {
   if (!views.includes(v)) v = "quests";
   document.querySelectorAll(".view").forEach((s) => s.classList.toggle("on", s.id === "v-" + v));
@@ -388,13 +433,15 @@ function setSync(kind, text) {
   syncEl.title = kind === "ok" ? "Правки общие для всех устройств" : text;
 }
 
-let store = { quests: [], dates: [], regular: [] };
+let store = { quests: [], dates: [], regular: [], board: [] };
 let rev = -1;
 let token = localStorage.getItem(TOKEN_KEY) || "";
 let openForms = 0;
 let onlyRest = false;
 let qnavActive = "";
 let busy = false;
+let botSyncDone = false;
+let botSyncBusy = false;
 
 function cacheSave() {
   try { localStorage.setItem(CACHE_KEY, JSON.stringify({ rev, data: store })); } catch (e) {}
@@ -404,6 +451,7 @@ function cacheLoad() {
     const raw = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
     if (raw && raw.data) {
       store = raw.data;
+      if (!Array.isArray(store.board)) store.board = [];
       rev = typeof raw.rev === "number" ? raw.rev : -1;
       return true;
     }
@@ -422,13 +470,15 @@ function seedState() {
       items: g.items.map((it, i) => ({ id: g.id + "-" + i, t: it.t, n: it.n || "", done: legacy[g.id + ":" + i] === true })),
     })),
     dates: DATES.map((d, i) => ({ id: "date-" + i, m: d.m, day: d.day, title: d.title, who: d.who || "" })),
-    regular: REGULAR.map((r, i) => ({ id: "reg-" + i, title: r.title, when: r.when || "", note: r.note || "", buy: r.buy || "" })),
+    regular: REGULAR.map((r, i) => ({ id: "reg-" + i, title: r.title, when: r.when || "", note: r.note || "", buy: r.buy || "", cat: r.cat || "" })),
+    board: [],
   };
 }
 
 function applyRemote(payload) {
   if (!payload || !payload.data) return false;
   store = payload.data;
+  if (!Array.isArray(store.board)) store.board = [];
   rev = payload.rev;
   cacheSave();
   renderAll();
@@ -471,6 +521,7 @@ async function refresh(opts) {
       applyRemote(res);
     }
     setSync("ok", "общее");
+    maybeBotsync();
     return true;
   } catch (err) {
     return handleApiError(err, quiet);
@@ -492,6 +543,204 @@ async function sendOps(ops) {
   } finally {
     busy = false;
   }
+}
+
+/* ───────── доска ───────── */
+const BOARD_COLS = [
+  { key: "backlog", title: "Бэклог" },
+  { key: "женя", title: "Женя" },
+  { key: "антон", title: "Антон" },
+  { key: "work", title: "В работе" },
+  { key: "done", title: "Сделано" },
+];
+const BOARD_STATUS_OPTIONS = [
+  { value: "open", label: "Открыто" },
+  { value: "work", label: "В работе" },
+  { value: "done", label: "Сделано" },
+];
+const BOARD_WHO_OPTIONS = [
+  { value: "", label: "Не назначено" },
+  { value: "женя", label: "Женя" },
+  { value: "антон", label: "Антон" },
+];
+const REG_CAT_OPTIONS = [{ value: "", label: "Без раздела" }].concat(REG_CATS.map((c) => ({ value: c.value, label: c.label })));
+
+function columnOf(card) {
+  if (card.status === "done") return "done";
+  if (card.status === "work") return "work";
+  if (card.who === "женя") return "женя";
+  if (card.who === "антон") return "антон";
+  return "backlog";
+}
+
+function maybeBotsync() {
+  if (botSyncDone || botSyncBusy) return;
+  const jobs = BOT_JOBS.filter((j) => j.board);
+  const cards = Array.isArray(store.board) ? store.board : [];
+  const have = new Set(cards.filter((c) => c.src === "bot" && c.ref).map((c) => c.ref));
+  const missing = jobs.filter((j) => !have.has(j.name));
+  if (!missing.length) {
+    botSyncDone = true;
+    return;
+  }
+  botSyncBusy = true;
+  sendOps([{
+    type: "board.botsync",
+    jobs: missing.map((j) => ({ ref: j.name, title: j.card, note: j.every })),
+  }])
+    .then((okRes) => { if (okRes) botSyncDone = true; })
+    .finally(() => { botSyncBusy = false; });
+}
+
+function renderBoard() {
+  const board = $("#board");
+  board.textContent = "";
+  const cards = Array.isArray(store.board) ? store.board : [];
+  BOARD_COLS.forEach((col) => {
+    const colCards = cards.filter((c) => columnOf(c) === col.key);
+    const box = node("div", "bcol");
+    box.dataset.col = col.key;
+    const head = node("div", "bcolhead");
+    head.appendChild(node("h3", "", col.title));
+    head.appendChild(node("span", "bcnt", String(colCards.length)));
+    box.appendChild(head);
+    colCards.forEach((card) => box.appendChild(boardCard(card)));
+    board.appendChild(box);
+  });
+}
+
+function boardCard(card) {
+  const el = node("div", "bcard" + (card.status === "done" ? " done" : ""));
+  el.dataset.id = card.id;
+
+  const top = node("div", "btop");
+  top.appendChild(node("div", "btitle", card.title));
+  const act = node("span", "rowact");
+  act.appendChild(iconBtn("✎", "Изменить карточку", () => openCardForm(card)));
+  act.appendChild(iconBtn("✕", "Удалить карточку", () => {
+    if (!confirm("Удалить карточку «" + card.title + "»?")) return;
+    sendOps([{ type: "board.del", id: card.id }]);
+  }));
+  top.appendChild(act);
+  el.appendChild(top);
+
+  if (card.note) el.appendChild(node("div", "bnote", card.note));
+  if (card.src) el.appendChild(node("span", "st", card.src === "bot" ? "крон" : "квесты"));
+
+  const controls = node("div", "bctl");
+  const statusSel = node("select");
+  BOARD_STATUS_OPTIONS.forEach((o) => {
+    const opt = node("option", "", o.label);
+    opt.value = o.value;
+    statusSel.appendChild(opt);
+  });
+  statusSel.value = card.status;
+  statusSel.addEventListener("change", () => sendOps([{ type: "board.set", id: card.id, status: statusSel.value }]));
+  const whoSel = node("select");
+  BOARD_WHO_OPTIONS.forEach((o) => {
+    const opt = node("option", "", o.label);
+    opt.value = o.value;
+    whoSel.appendChild(opt);
+  });
+  whoSel.value = card.who;
+  whoSel.addEventListener("change", () => sendOps([{ type: "board.set", id: card.id, who: whoSel.value }]));
+  controls.append(statusSel, whoSel);
+  el.appendChild(controls);
+  return el;
+}
+
+function boardFormHost() {
+  return $("#board-forms");
+}
+
+function focusField(form) {
+  const field = form.querySelector("input, select, textarea");
+  if (field) field.focus();
+}
+
+function openCardForm(card) {
+  const host = boardFormHost();
+  const existing = host.querySelector(".inline");
+  if (existing) { focusField(existing); return; }
+  openForms++;
+  const form = buildForm(
+    [
+      { name: "title", label: "Название", value: card ? card.title : "", placeholder: "что сделать", maxlength: 300 },
+      { name: "note", label: "Описание (необязательно)", type: "textarea", value: card ? card.note || "" : "", maxlength: 800 },
+    ],
+    {
+      submit: card ? "Сохранить" : "Добавить",
+      onCancel: () => { form.remove(); openForms--; },
+      onSubmit: (v) => {
+        if (!v.title.trim()) { toast("Пустое название не сохраню"); return; }
+        form.remove();
+        openForms--;
+        sendOps([
+          card
+            ? { type: "board.edit", id: card.id, title: v.title, note: v.note }
+            : { type: "board.add", title: v.title, note: v.note },
+        ]);
+      },
+    },
+  );
+  host.appendChild(form);
+  focusField(form);
+}
+
+function openFromQuests() {
+  const host = boardFormHost();
+  const existing = host.querySelector(".inline");
+  if (existing) { focusField(existing); return; }
+  const linked = new Set((store.board || []).filter((c) => c.src === "quest" && c.ref).map((c) => c.ref));
+  const items = [];
+  store.quests.forEach((g) => g.items.forEach((it) => {
+    if (!linked.has(it.id)) items.push({ id: it.id, title: it.t, note: it.n || "", group: g.title });
+  }));
+  if (!items.length) { toast("Все пункты уже на доске"); return; }
+  openForms++;
+  const form = buildForm(
+    [{ name: "item", label: "Пункт квеста", type: "select", options: items.map((it) => ({ value: it.id, label: it.group + " · " + it.title })), value: items[0].id }],
+    {
+      submit: "Добавить",
+      onCancel: () => { form.remove(); openForms--; },
+      onSubmit: (v) => {
+        const item = items.find((it) => it.id === v.item);
+        if (!item) { toast("Пункт не найден"); return; }
+        const note = item.n ? "Из квестов: " + item.group + "\n" + item.n : "Из квестов: " + item.group;
+        form.remove();
+        openForms--;
+        sendOps([{ type: "board.add", title: item.title, note, src: "quest", ref: item.id }]);
+      },
+    },
+  );
+  host.appendChild(form);
+  focusField(form);
+}
+
+function openFromReminders() {
+  const host = boardFormHost();
+  const existing = host.querySelector(".inline");
+  if (existing) { focusField(existing); return; }
+  const linked = new Set((store.board || []).filter((c) => c.src === "bot" && c.ref).map((c) => c.ref));
+  const jobs = BOT_JOBS.filter((j) => j.board && !linked.has(j.name));
+  if (!jobs.length) { toast("Все напоминания уже на доске"); return; }
+  openForms++;
+  const form = buildForm(
+    [{ name: "job", label: "Напоминание", type: "select", options: jobs.map((j) => ({ value: j.name, label: j.card || j.name })), value: jobs[0].name }],
+    {
+      submit: "Добавить",
+      onCancel: () => { form.remove(); openForms--; },
+      onSubmit: (v) => {
+        const job = jobs.find((j) => j.name === v.job);
+        if (!job) { toast("Напоминание не найдено"); return; }
+        form.remove();
+        openForms--;
+        sendOps([{ type: "board.add", title: job.card, note: job.every, src: "bot", ref: job.name }]);
+      },
+    },
+  );
+  host.appendChild(form);
+  focusField(form);
 }
 
 /* ───────── рендер: квесты ───────── */
@@ -778,6 +1027,7 @@ function renderJobs() {
     const h4 = node("h4");
     h4.appendChild(node("code", "", j.name));
     h4.appendChild(node("span", "st " + j.status, j.status === "on" ? "работает" : "на паузе"));
+    if (j.board) h4.appendChild(node("span", "st tag", "→ в бэклог"));
     body.appendChild(h4);
     body.appendChild(node("p", "", j.text));
     el.append(t, body);
@@ -851,24 +1101,42 @@ function openDateForm(date) {
   form.querySelector("input").focus();
 }
 
+function regularCard(r) {
+  const card = node("div", "r");
+  card.dataset.id = r.id;
+  card.appendChild(node("h4", "", r.title));
+  if (r.when) card.appendChild(node("div", "when", r.when));
+  if (r.note) card.appendChild(node("p", "", r.note));
+  if (r.buy) card.appendChild(node("span", "buy", r.buy));
+  const act = node("span", "rowact");
+  act.appendChild(iconBtn("✎", "Изменить дело", () => openRegularForm(r)));
+  act.appendChild(iconBtn("✕", "Удалить дело", () => {
+    if (!confirm("Удалить «" + r.title + "»?")) return;
+    sendOps([{ type: "regular.del", id: r.id }]);
+  }));
+  card.appendChild(act);
+  return card;
+}
+
 function renderRegular() {
   const w = $("#regular");
   w.textContent = "";
+  const groups = REG_CATS.map((c) => ({ value: c.value, label: c.label, items: [] }));
+  const other = { value: "", label: "Без раздела", items: [] };
   store.regular.forEach((r) => {
-    const card = node("div", "r");
-    card.dataset.id = r.id;
-    card.appendChild(node("h4", "", r.title));
-    card.appendChild(node("div", "when", r.when));
-    if (r.note) card.appendChild(node("p", "", r.note));
-    if (r.buy) card.appendChild(node("span", "buy", r.buy));
-    const act = node("span", "rowact");
-    act.appendChild(iconBtn("✎", "Изменить дело", () => openRegularForm(r)));
-    act.appendChild(iconBtn("✕", "Удалить дело", () => {
-      if (!confirm("Удалить «" + r.title + "»?")) return;
-      sendOps([{ type: "regular.del", id: r.id }]);
-    }));
-    card.appendChild(act);
-    w.appendChild(card);
+    const group = groups.find((g) => g.value === r.cat);
+    (group || other).items.push(r);
+  });
+  groups.concat(other).forEach((group) => {
+    if (!group.items.length) return;
+    const block = node("div", "reggroup");
+    block.dataset.cat = group.value;
+    const head = node("div", "reghead");
+    head.appendChild(node("h3", "", group.label));
+    head.appendChild(node("span", "rcnt", String(group.items.length)));
+    block.appendChild(head);
+    group.items.forEach((r) => block.appendChild(regularCard(r)));
+    w.appendChild(block);
   });
 }
 
@@ -882,6 +1150,7 @@ function openRegularForm(reg) {
       { name: "when", label: "Когда", value: reg ? reg.when : "", placeholder: "15-го числа каждого месяца", maxlength: 300 },
       { name: "note", label: "Заметка", type: "textarea", value: reg ? reg.note : "", maxlength: 800 },
       { name: "buy", label: "Купить заранее", value: reg ? reg.buy : "", placeholder: "например, купить 8-го", maxlength: 300 },
+      { name: "cat", label: "Раздел", type: "select", options: REG_CAT_OPTIONS, value: reg ? reg.cat || "" : "" },
     ],
     {
       submit: reg ? "Сохранить" : "Добавить",
@@ -890,7 +1159,7 @@ function openRegularForm(reg) {
         if (!v.title.trim()) { toast("Название не может быть пустым"); return; }
         form.remove();
         openForms--;
-        const payload = { title: v.title, when: v.when, note: v.note, buy: v.buy };
+        const payload = { title: v.title, when: v.when, note: v.note, buy: v.buy, cat: v.cat };
         sendOps([reg ? Object.assign({ type: "regular.edit", id: reg.id }, payload) : Object.assign({ type: "regular.add" }, payload)]);
       },
     },
@@ -1007,6 +1276,7 @@ function renderDriving() {
 /* ───────── общий рендер ───────── */
 function renderAll() {
   renderQuests();
+  renderBoard();
   renderDates();
   renderRegular();
 }
@@ -1054,6 +1324,13 @@ $("#show-rest").addEventListener("click", (e) => {
 $("#add-group").addEventListener("click", () => openGroupForm(null));
 $("#add-date").addEventListener("click", () => openDateForm(null));
 $("#add-regular").addEventListener("click", () => openRegularForm(null));
+$("#add-card").addEventListener("click", () => openCardForm(null));
+$("#from-quests").addEventListener("click", openFromQuests);
+$("#from-reminders").addEventListener("click", openFromReminders);
+$("#clear-done").addEventListener("click", () => {
+  if (!confirm("Убрать все выполненные карточки с доски?")) return;
+  sendOps([{ type: "board.clearDone" }]);
+});
 $("#reset").addEventListener("click", () => {
   if (!confirm("Снять все отметки? Галочки исчезнут у всех, на всех устройствах.")) return;
   sendOps([{ type: "quests.reset" }]);

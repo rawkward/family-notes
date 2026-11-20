@@ -16,8 +16,14 @@ const LIMITS = {
   items: 400,
   dates: 200,
   regular: 200,
+  board: 300,
   ops: 100,
 };
+
+const BOARD_STATUS = ["open", "work", "done"];
+const BOARD_WHO = ["", "женя", "антон"];
+const BOARD_SRC = ["", "bot", "quest"];
+const REG_CAT_VALUES = ["квартира", "семейное", "кошка", "женя", "антон"];
 
 function text(value, max = LIMITS.text) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
@@ -37,7 +43,7 @@ function intIn(value, min, max, field) {
 }
 
 export function emptyState() {
-  return { quests: [], dates: [], regular: [] };
+  return { quests: [], dates: [], regular: [], board: [] };
 }
 
 function clone(state) {
@@ -92,6 +98,23 @@ function normalizeRegular(raw) {
     when: text(reg.when, LIMITS.text),
     note: text(reg.note, LIMITS.note),
     buy: text(reg.buy, LIMITS.text),
+    cat: REG_CAT_VALUES.includes(reg.cat) ? reg.cat : "",
+  };
+}
+
+function normalizeCard(raw) {
+  const card = raw && typeof raw === "object" ? raw : {};
+  const title = text(card.title);
+  if (!title) throw new ValidationError("empty_card", [{ field: "title", message: "пустая карточка" }]);
+  return {
+    id: typeof card.id === "string" && card.id ? card.id.slice(0, 40) : newId("crd"),
+    title,
+    note: text(card.note, LIMITS.note),
+    status: BOARD_STATUS.includes(card.status) ? card.status : "open",
+    who: BOARD_WHO.includes(card.who) ? card.who : "",
+    src: BOARD_SRC.includes(card.src) ? card.src : "",
+    ref: text(card.ref, 60),
+    doneAt: typeof card.doneAt === "string" ? card.doneAt : "",
   };
 }
 
@@ -100,10 +123,12 @@ export function normalizeState(raw) {
   const quests = Array.isArray(state.quests) ? state.quests : [];
   const dates = Array.isArray(state.dates) ? state.dates : [];
   const regular = Array.isArray(state.regular) ? state.regular : [];
+  const board = Array.isArray(state.board) ? state.board : [];
   return {
     quests: quests.slice(0, LIMITS.groups).map(normalizeGroup),
     dates: dates.slice(0, LIMITS.dates).map(normalizeDate),
     regular: regular.slice(0, LIMITS.regular).map(normalizeRegular),
+    board: board.slice(0, LIMITS.board).map(normalizeCard),
   };
 }
 
@@ -134,6 +159,7 @@ export function applyOps(state, ops) {
 
   const next = clone(state);
   delete next.checklists;
+  if (!Array.isArray(next.board)) next.board = [];
   const usedIds = new Set();
   for (const group of next.quests) {
     usedIds.add(group.id);
@@ -141,6 +167,7 @@ export function applyOps(state, ops) {
   }
   for (const date of next.dates) usedIds.add(date.id);
   for (const reg of next.regular) usedIds.add(reg.id);
+  for (const card of next.board) usedIds.add(card.id);
 
   for (const raw of ops) {
     const op = raw && typeof raw === "object" ? raw : {};
@@ -219,13 +246,99 @@ export function applyOps(state, ops) {
       case "regular.edit": {
         const reg = next.regular.find((r) => r.id === op.id);
         if (!reg) throw new ValidationError("regular_not_found");
-        Object.assign(reg, normalizeRegular({ title: op.title, when: op.when, note: op.note, buy: op.buy, id: reg.id }));
+        Object.assign(reg, normalizeRegular({ title: op.title, when: op.when, note: op.note, buy: op.buy, cat: op.cat, id: reg.id }));
         break;
       }
       case "regular.del": {
         const before = next.regular.length;
         next.regular = next.regular.filter((r) => r.id !== op.id);
         if (next.regular.length === before) throw new ValidationError("regular_not_found");
+        break;
+      }
+      case "board.add": {
+        if (next.board.length >= LIMITS.board) throw new ValidationError("too_many_board");
+        const src = BOARD_SRC.includes(op.src) ? op.src : "";
+        const ref = text(op.ref, 60);
+        if ((src === "bot" || src === "quest") && ref && next.board.some((c) => c.src === src && c.ref === ref)) {
+          throw new ValidationError("board_duplicate", [{ field: "ref", message: "карточка уже есть" }]);
+        }
+        const card = normalizeCard({
+          id: uniqueId("crd", usedIds),
+          title: op.title,
+          note: op.note,
+          status: op.status,
+          who: op.who,
+          src,
+          ref,
+        });
+        if (card.status === "done") card.doneAt = new Date().toISOString();
+        next.board.push(card);
+        break;
+      }
+      case "board.edit": {
+        const card = next.board.find((c) => c.id === op.id);
+        if (!card) throw new ValidationError("board_not_found");
+        const title = text(op.title);
+        if (!title) throw new ValidationError("empty_card", [{ field: "title", message: "пустая карточка" }]);
+        card.title = title;
+        card.note = text(op.note, LIMITS.note);
+        break;
+      }
+      case "board.set": {
+        const card = next.board.find((c) => c.id === op.id);
+        if (!card) throw new ValidationError("board_not_found");
+        if (op.status !== undefined) {
+          if (!BOARD_STATUS.includes(op.status)) throw new ValidationError("bad_status");
+          card.status = op.status;
+        }
+        if (op.who !== undefined) {
+          if (!BOARD_WHO.includes(op.who)) throw new ValidationError("bad_who");
+          card.who = op.who;
+        }
+        if (card.status === "done") {
+          if (!card.doneAt) card.doneAt = new Date().toISOString();
+        } else {
+          card.doneAt = "";
+        }
+        break;
+      }
+      case "board.del": {
+        const before = next.board.length;
+        next.board = next.board.filter((c) => c.id !== op.id);
+        if (next.board.length === before) throw new ValidationError("board_not_found");
+        break;
+      }
+      case "board.clearDone": {
+        const days = Number.isInteger(op.days) && op.days >= 1 ? op.days : null;
+        const threshold = days !== null ? Date.now() - days * 86400000 : 0;
+        next.board = next.board.filter((card) => {
+          if (card.status !== "done") return true;
+          if (days === null) return false;
+          if (!card.doneAt) return false;
+          const at = Date.parse(card.doneAt);
+          return Number.isFinite(at) && at >= threshold;
+        });
+        break;
+      }
+      case "board.botsync": {
+        if (!Array.isArray(op.jobs) || op.jobs.length === 0) throw new ValidationError("empty_jobs");
+        for (const raw of op.jobs) {
+          const job = raw && typeof raw === "object" ? raw : {};
+          const ref = text(job.ref, 60);
+          if (ref && next.board.some((c) => c.src === "bot" && c.ref === ref)) continue;
+          if (next.board.length >= LIMITS.board) throw new ValidationError("too_many_board");
+          next.board.push(
+            normalizeCard({
+              id: uniqueId("crd", usedIds),
+              title: job.title,
+              note: job.note,
+              status: "open",
+              who: "",
+              src: "bot",
+              ref,
+            }),
+          );
+        }
         break;
       }
       default:

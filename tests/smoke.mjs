@@ -103,7 +103,7 @@ check("прогресс на нуле", doc.getElementById("done-num").textConte
 check("задач бота = 5, одна на паузе", q(".job").length === 5 && q(".st.paused").length === 1);
 check("дат = 4", q(".date").length === 4);
 check("у дат есть обратный отсчёт", [...q(".date .in")].every((e) => /через|сегодня|завтра/.test(e.textContent)));
-check("регулярных дел = 3", q(".reg .r").length === 3);
+check("регулярных дел = 6", q(".reg .r").length === 6);
 check("школ = 7", q(".school").length === 7);
 check("у каждой школы есть телефон, сайт и карта", [...q(".school")].every((s) => {
   const links = [...s.querySelectorAll(".links a")].map((x) => x.getAttribute("href"));
@@ -171,7 +171,101 @@ form.querySelector('[name="when"]').value = "каждое воскресенье
 form.dispatchEvent(new a.window.Event("submit", { cancelable: true, bubbles: true }));
 await settle();
 check("регулярное дело добавилось", server.data.regular.some((r) => r.title === "Полить лиану"));
-check("в разметке 4 регулярных дела", q(".reg .r").length === 4);
+check("в разметке 7 регулярных дел", q(".reg .r").length === 7);
+check(
+  "разделы регулярных дел идут по порядку",
+  [...doc.querySelectorAll("#regular .reggroup h3")].map((e) => e.textContent).join("|") === "Квартира|Кошка|Без раздела",
+);
+
+/* ─── доска ─── */
+const boardCol = (key) => doc.querySelector('#board .bcol[data-col="' + key + '"]');
+const colCards = (key) => [...boardCol(key).querySelectorAll(".bcard")];
+const boardCard = (title) => [...doc.querySelectorAll("#board .bcard")].find((c) => c.textContent.includes(title));
+const bform = () => doc.querySelector("#board-forms .inline");
+
+await settle();
+check(
+  "columnOf: статус и исполнитель определяют колонку",
+  typeof a.window.columnOf === "function" &&
+    a.window.columnOf({ status: "done" }) === "done" &&
+    a.window.columnOf({ status: "work" }) === "work" &&
+    a.window.columnOf({ status: "open", who: "женя" }) === "женя" &&
+    a.window.columnOf({ status: "open", who: "антон" }) === "антон" &&
+    a.window.columnOf({ status: "open", who: "" }) === "backlog",
+);
+check("на доске 2 карточки крона в бэклоге", colCards("backlog").length === 2);
+check(
+  "у карточек крона есть чип «крон»",
+  colCards("backlog").every((c) => [...c.querySelectorAll(".st")].some((s) => s.textContent === "крон")),
+);
+check(
+  "чип «→ в бэклог» только у задач на доске",
+  [...doc.querySelectorAll(".job")].filter((j) => [...j.querySelectorAll(".st")].some((s) => s.textContent === "→ в бэклог")).length === 2,
+);
+
+doc.getElementById("add-card").click();
+await settle(2);
+check("форма новой карточки открылась", !!bform());
+bform().querySelector('[name="title"]').value = "Карточка из теста";
+bform().querySelector('[name="note"]').value = "описание карточки";
+bform().dispatchEvent(new a.window.Event("submit", { cancelable: true, bubbles: true }));
+await settle();
+check("карточка добавилась на сервер", server.data.board.some((c) => c.title === "Карточка из теста"));
+check("карточка появилась в бэклоге", colCards("backlog").some((c) => c.textContent.includes("Карточка из теста")));
+
+let cardEl = boardCard("Карточка из теста");
+const statusSel = cardEl.querySelectorAll(".bctl select")[0];
+statusSel.value = "work";
+statusSel.dispatchEvent(new a.window.Event("change"));
+await settle();
+check("статус «В работе» сохранён на сервере", server.data.board.find((c) => c.title === "Карточка из теста").status === "work");
+check("карточка переехала в колонку «В работе»", colCards("work").some((c) => c.textContent.includes("Карточка из теста")));
+
+cardEl = boardCard("Карточка из теста");
+const statusSel2 = cardEl.querySelectorAll(".bctl select")[0];
+statusSel2.value = "open";
+statusSel2.dispatchEvent(new a.window.Event("change"));
+await settle();
+cardEl = boardCard("Карточка из теста");
+const whoSel = cardEl.querySelectorAll(".bctl select")[1];
+whoSel.value = "женя";
+whoSel.dispatchEvent(new a.window.Event("change"));
+await settle();
+check("назначение Жене при «Открыто» → колонка «Женя»", colCards("женя").some((c) => c.textContent.includes("Карточка из теста")));
+
+cardEl = boardCard("Карточка из теста");
+const statusSel3 = cardEl.querySelectorAll(".bctl select")[0];
+statusSel3.value = "done";
+statusSel3.dispatchEvent(new a.window.Event("change"));
+await settle();
+const doneCard = server.data.board.find((c) => c.title === "Карточка из теста");
+check("статус «Сделано» → колонка «Сделано»", colCards("done").some((c) => c.textContent.includes("Карточка из теста")));
+check("у выполненной карточки есть doneAt", !!doneCard.doneAt);
+
+doc.getElementById("from-quests").click();
+await settle(2);
+check("форма «Из квестов» открылась", !!bform());
+const questRef = bform().querySelector('[name="item"]').value;
+bform().dispatchEvent(new a.window.Event("submit", { cancelable: true, bubbles: true }));
+await settle();
+check(
+  "карточка из квестов создана с src=quest",
+  server.data.board.some((c) => c.src === "quest" && c.ref === questRef),
+);
+
+a.window.confirm = () => true;
+const beforeClear = server.data.board.length;
+const doneBefore = server.data.board.filter((c) => c.status === "done").length;
+doc.getElementById("clear-done").click();
+await settle();
+check(
+  "очистка удалила выполненные карточки",
+  doneBefore === 1 && server.data.board.length === beforeClear - doneBefore && server.data.board.every((c) => c.status !== "done"),
+);
+check(
+  "очистка не тронула остальные карточки",
+  server.data.board.some((c) => c.src === "quest" && c.ref === questRef) && server.data.board.filter((c) => c.src === "bot").length === 2,
+);
 
 /* ─── чек-листа больше нет ─── */
 check("вкладки «Чек-лист» нет", !doc.querySelector('[data-view="checklist"]'));
@@ -195,14 +289,25 @@ check("после фильтра «Только невыполненное» и 
 const b = await bootDevice();
 check("второе устройство видит тот же список", b.document.querySelectorAll("#quests .qitem").length === 29);
 check("второе устройство видит ту же отметку", b.document.getElementById("done-num").textContent === "1");
-check("второе устройство видит новое регулярное дело", b.document.querySelectorAll(".reg .r").length === 4);
+check("второе устройство видит новое регулярное дело", b.document.querySelectorAll(".reg .r").length === 7);
+check(
+  "второе устройство видит те же карточки доски",
+  b.document.querySelectorAll("#board .bcard").length === server.data.board.length && server.data.board.length === 3,
+);
 check("второе устройство без ошибок JS", b.errors.length === 0);
 if (b.errors.length) console.log(b.errors.slice(0, 4));
 
 /* ─── вкладки ─── */
+let boardClickThrew = false;
+try { doc.querySelector('[data-view="board"]').click(); } catch (e) { boardClickThrew = true; }
+check("вкладка «Доска» переключается без ошибок", !boardClickThrew && doc.getElementById("v-board").classList.contains("on"));
+check("адрес меняется на #board", a.window.location.hash === "#board");
+
 doc.querySelector('[data-view="driving"]').click();
 check("вкладка «Автошкола» переключается", doc.getElementById("v-driving").classList.contains("on"));
 check("адрес меняется на #driving", a.window.location.hash === "#driving");
+check("после операций с доской ошибок JS нет", a.errors.length === 0);
+if (a.errors.length) console.log(a.errors.slice(0, 4));
 
 console.log(ok ? "\nALL PASS" : "\nЕСТЬ ПАДЕНИЯ");
 process.exit(ok ? 0 : 1);
