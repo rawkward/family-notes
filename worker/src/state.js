@@ -310,6 +310,7 @@ export function applyOps(state, ops) {
           if (!BOARD_WHO.includes(op.who)) throw new ValidationError("bad_who");
           card.who = op.who;
         }
+        if (op.due !== undefined) card.due = dueDate(op.due);
         if (card.status === "done") {
           if (!card.doneAt) card.doneAt = new Date().toISOString();
         } else {

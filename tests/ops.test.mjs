@@ -278,6 +278,36 @@ test("board.set: статус, исполнитель, doneAt", () => {
   assert.throws(() => applyOps(added, [{ type: "board.set", id: "нет", who: "женя" }]), ValidationError);
 });
 
+test("board.set: срок ставится, меняется, снимается и мусор не проходит", () => {
+  const added = applyOps(base(), [{ type: "board.add", title: "С делом", due: "2026-05-01" }]);
+  const id = added.board[0].id;
+  assert.equal(added.board[0].due, "2026-05-01");
+
+  const changed = applyOps(added, [{ type: "board.set", id, due: "2026-06-15" }]);
+  assert.equal(changed.board[0].due, "2026-06-15");
+
+  const removed = applyOps(changed, [{ type: "board.set", id, due: "" }]);
+  assert.equal(removed.board[0].due, "");
+
+  for (const bad of ["2026-02-30", "завтра"]) {
+    const next = applyOps(added, [{ type: "board.set", id, due: bad }]);
+    assert.equal(next.board[0].due, "");
+  }
+});
+
+test("board.set с одним due не сбрасывает статус, исполнителя и doneAt", () => {
+  const added = applyOps(base(), [{ type: "board.add", title: "Дело", status: "done", who: "антон" }]);
+  const id = added.board[0].id;
+  const doneAt = added.board[0].doneAt;
+  assert.ok(doneAt);
+
+  const next = applyOps(added, [{ type: "board.set", id, due: "2026-12-31" }]);
+  assert.equal(next.board[0].status, "done");
+  assert.equal(next.board[0].who, "антон");
+  assert.equal(next.board[0].doneAt, doneAt);
+  assert.equal(next.board[0].due, "2026-12-31");
+});
+
 test("board.del удаляет карточку", () => {
   const added = applyOps(base(), [{ type: "board.add", title: "А" }, { type: "board.add", title: "Б" }]);
   const removed = applyOps(added, [{ type: "board.del", id: added.board[0].id }]);

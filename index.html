@@ -157,9 +157,12 @@ section.view.on{display:block}
 .bcard.done .btitle{color:#a79e92;text-decoration:line-through}
 .bnote{margin-top:4px;font-size:.8rem;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere}
 .bcard .st{display:inline-block;margin-top:7px;background:var(--bg2);color:var(--muted)}
-.bdate{display:inline-block;margin-top:6px;font-size:.72rem;font-weight:700;border-radius:999px;padding:2px 8px;background:var(--bg2);color:var(--muted)}
+.bdate{display:inline-block;border:0;cursor:pointer;font:inherit;font-size:.72rem;font-weight:700;border-radius:999px;padding:2px 8px;background:var(--bg2);color:var(--muted)}
 .bdate.soon{background:var(--warn-soft);color:var(--warn)}
 .bdate.over{background:var(--bad-soft);color:var(--bad)}
+.bdue-add{border:1px dashed var(--line);border-radius:999px;padding:2px 8px;background:none;color:var(--muted);font:inherit;font-size:.72rem;font-weight:600;cursor:pointer}
+.bdue-add:hover{color:var(--accent);border-color:#e0c3b0;background:#fffaf5}
+.bdue-input{width:130px;border:1px solid var(--line);border-radius:8px;padding:4px 6px;font:inherit;font-size:.78rem;background:#fff;color:var(--ink);min-width:0}
 .bctl{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
 .bctl select{border:1px solid var(--line);border-radius:8px;padding:5px 7px;font:inherit;font-size:.78rem;background:#fff;color:var(--ink);min-width:0;flex:1}
 
@@ -681,12 +684,6 @@ function boardCard(card) {
   top.appendChild(act);
   el.appendChild(top);
 
-  const due = card.due || "";
-  if (due) {
-    const tone = dueTone(due);
-    el.appendChild(node("span", "bdate" + (tone ? " " + tone : ""), "до " + dueLabel(due)));
-  }
-
   if (card.note) el.appendChild(node("div", "bnote", card.note));
   if (card.src) el.appendChild(node("span", "st", card.src === "bot" ? "крон" : "квесты"));
 
@@ -707,9 +704,52 @@ function boardCard(card) {
   });
   whoSel.value = card.who;
   whoSel.addEventListener("change", () => sendOps([{ type: "board.set", id: card.id, who: whoSel.value }]));
-  controls.append(statusSel, whoSel);
+  controls.append(statusSel, whoSel, dueButton(card));
   el.appendChild(controls);
   return el;
+}
+
+function dueButton(card) {
+  const due = card.due || "";
+  let btn;
+  if (due) {
+    const tone = dueTone(due);
+    btn = node("button", "bdate" + (tone ? " " + tone : ""), "до " + dueLabel(due));
+  } else {
+    btn = node("button", "bdue-add", "＋ срок");
+  }
+  btn.type = "button";
+  btn.addEventListener("click", () => openDueInput(btn, card, due));
+  return btn;
+}
+
+function openDueInput(btn, card, value) {
+  const input = node("input", "bdue-input");
+  input.type = "date";
+  input.value = value || "";
+  let changed = false;
+  let done = false;
+  const restore = () => {
+    if (done) return;
+    done = true;
+    if (input.parentNode) input.replaceWith(btn);
+  };
+  input.addEventListener("change", () => {
+    changed = true;
+    done = true;
+    sendOps([{ type: "board.set", id: card.id, due: input.value }]);
+  });
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      e.preventDefault();
+      restore();
+    }
+  });
+  input.addEventListener("blur", () => {
+    if (!changed) restore();
+  });
+  btn.replaceWith(input);
+  input.focus();
 }
 
 function boardFormHost() {

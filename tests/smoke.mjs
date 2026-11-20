@@ -348,6 +348,65 @@ check(
 await addBoardCard("Карточка без срока");
 check("карточка без срока рендерится без бейджа", !boardCard("Карточка без срока").querySelector(".bdate"));
 
+check(
+  "на каждой карточке ровно один контрол срока",
+  [...doc.querySelectorAll("#board .bcard")].every((c) => c.querySelectorAll(".bdate, .bdue-add").length === 1),
+);
+check(
+  "над описанием нет отдельного бейджа срока",
+  [...doc.querySelectorAll("#board .bcard")].every(
+    (c) => ![...c.children].some((ch) => ch.classList.contains("bdate") || ch.classList.contains("bdue-add")),
+  ),
+);
+
+let quickCard = boardCard("Карточка без срока");
+let quickAdd = quickCard.querySelector(".bdue-add");
+check(
+  "у карточки без срока есть кнопка ＋ срок и нет .bdate",
+  !!quickAdd && quickAdd.textContent === "＋ срок" && !quickCard.querySelector(".bdate"),
+);
+
+quickAdd.click();
+await settle(2);
+quickCard = boardCard("Карточка без срока");
+let quickInput = quickCard.querySelector("input.bdue-input");
+check("клик по ＋ срок рисует поле даты", !!quickInput && quickInput.type === "date");
+
+quickInput.value = future;
+quickInput.dispatchEvent(new a.window.Event("change"));
+await settle();
+check(
+  "срок из быстрой кнопки сохранился на сервере",
+  server.data.board.some((c) => c.title === "Карточка без срока" && c.due === future),
+);
+quickCard = boardCard("Карточка без срока");
+check(
+  "после ответа на карточке появилась кнопка .bdate",
+  !!quickCard.querySelector(".bdate") && !quickCard.querySelector(".bdue-add"),
+);
+
+quickCard.querySelector(".bdate").click();
+await settle(2);
+quickCard = boardCard("Карточка без срока");
+quickInput = quickCard.querySelector("input.bdue-input");
+check(
+  "клик по .bdate рисует поле даты с текущим значением",
+  !!quickInput && quickInput.value === future,
+);
+
+quickInput.value = "";
+quickInput.dispatchEvent(new a.window.Event("change"));
+await settle();
+check(
+  "очистка поля снимает срок на сервере",
+  server.data.board.some((c) => c.title === "Карточка без срока" && c.due === ""),
+);
+quickCard = boardCard("Карточка без срока");
+check(
+  "после снятия срока снова кнопка ＋ срок",
+  !!quickCard.querySelector(".bdue-add") && !quickCard.querySelector(".bdate"),
+);
+
 /* ─── вкладки ─── */
 let boardClickThrew = false;
 try { doc.querySelector('[data-view="board"]').click(); } catch (e) { boardClickThrew = true; }
