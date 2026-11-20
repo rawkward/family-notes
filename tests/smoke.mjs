@@ -100,7 +100,7 @@ const q = (sel) => doc.querySelectorAll(sel);
 
 check("данные с сервера развернулись: 8 групп, 28 пунктов", q("#quests .qcard").length === 8 && q("#quests .qitem").length === 28);
 check("прогресс на нуле", doc.getElementById("done-num").textContent === "0");
-check("задач бота = 4, одна на паузе", q(".job").length === 4 && q(".st.paused").length === 1);
+check("задач бота = 5, одна на паузе", q(".job").length === 5 && q(".st.paused").length === 1);
 check("дат = 4", q(".date").length === 4);
 check("у дат есть обратный отсчёт", [...q(".date .in")].every((e) => /через|сегодня|завтра/.test(e.textContent)));
 check("регулярных дел = 3", q(".reg .r").length === 3);
