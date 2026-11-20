@@ -299,6 +299,55 @@ check(
 check("второе устройство без ошибок JS", b.errors.length === 0);
 if (b.errors.length) console.log(b.errors.slice(0, 4));
 
+/* ─── срок карточек ─── */
+const isoDay = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+const today = isoDay(new Date());
+const pastDate = new Date(); pastDate.setDate(pastDate.getDate() - 3);
+const futureDate = new Date(); futureDate.setDate(futureDate.getDate() + 5);
+const past = isoDay(pastDate);
+const future = isoDay(futureDate);
+
+async function addBoardCard(title, due) {
+  doc.getElementById("add-card").click();
+  await settle(2);
+  const f = bform();
+  f.querySelector('[name="title"]').value = title;
+  if (due) f.querySelector('[name="due"]').value = due;
+  f.dispatchEvent(new a.window.Event("submit", { cancelable: true, bubbles: true }));
+  await settle();
+}
+
+await addBoardCard("Срок в будущем", future);
+check(
+  "карточка со сроком сохранилась на сервере",
+  server.data.board.some((c) => c.title === "Срок в будущем" && c.due === future),
+);
+let dueCard = boardCard("Срок в будущем");
+let dueBadge = dueCard.querySelector(".bdate");
+check(
+  "бейдж показывает день.месяц",
+  !!dueBadge && dueBadge.textContent === "до " + future.slice(8, 10) + "." + future.slice(5, 7),
+);
+check("дальний срок без классов soon/over", !!dueBadge && !dueBadge.classList.contains("soon") && !dueBadge.classList.contains("over"));
+
+await addBoardCard("Просроченная карточка", past);
+dueCard = boardCard("Просроченная карточка");
+dueBadge = dueCard.querySelector(".bdate");
+check(
+  "прошедший срок сохранился на сервере",
+  server.data.board.some((c) => c.title === "Просроченная карточка" && c.due === past),
+);
+check("прошедший срок получил класс over", !!dueBadge && dueBadge.classList.contains("over"));
+const overdueEl = doc.querySelector(".board-actions .overdue-count");
+const overdueExpected = server.data.board.filter((c) => c.due && c.due < today).length;
+check(
+  "счётчик просроченных показывает актуальное число",
+  !!overdueEl && overdueEl.textContent === "просрочено: " + overdueExpected && overdueExpected > 0,
+);
+
+await addBoardCard("Карточка без срока");
+check("карточка без срока рендерится без бейджа", !boardCard("Карточка без срока").querySelector(".bdate"));
+
 /* ─── вкладки ─── */
 let boardClickThrew = false;
 try { doc.querySelector('[data-view="board"]').click(); } catch (e) { boardClickThrew = true; }

@@ -29,6 +29,18 @@ function text(value, max = LIMITS.text) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
 }
 
+function dueDate(value) {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return "";
+  const year = Number(value.slice(0, 4));
+  const month = Number(value.slice(5, 7));
+  const day = Number(value.slice(8, 10));
+  if (month < 1 || month > 12 || day < 1) return "";
+  const leap = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+  const days = [31, leap ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  if (day > days[month - 1]) return "";
+  return value;
+}
+
 function newId(prefix) {
   const raw = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2);
   return `${prefix}_${raw.replace(/-/g, "").slice(0, 10)}`;
@@ -112,6 +124,7 @@ function normalizeCard(raw) {
     note: text(card.note, LIMITS.note),
     status: BOARD_STATUS.includes(card.status) ? card.status : "open",
     who: BOARD_WHO.includes(card.who) ? card.who : "",
+    due: dueDate(card.due),
     src: BOARD_SRC.includes(card.src) ? card.src : "",
     ref: text(card.ref, 60),
     doneAt: typeof card.doneAt === "string" ? card.doneAt : "",
@@ -268,6 +281,7 @@ export function applyOps(state, ops) {
           note: op.note,
           status: op.status,
           who: op.who,
+          due: op.due,
           src,
           ref,
         });
@@ -282,6 +296,7 @@ export function applyOps(state, ops) {
         if (!title) throw new ValidationError("empty_card", [{ field: "title", message: "пустая карточка" }]);
         card.title = title;
         card.note = text(op.note, LIMITS.note);
+        card.due = dueDate(op.due);
         break;
       }
       case "board.set": {

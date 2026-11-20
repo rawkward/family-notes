@@ -143,7 +143,8 @@ section.view.on{display:block}
 .st.tag{background:var(--bg2);color:var(--muted)}
 
 /* board */
-.board-actions{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+.board-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 14px}
+.overdue-count{border:1px solid var(--line);border-radius:999px;padding:7px 14px;font:inherit;font-size:.83rem;font-weight:600;color:var(--bad);background:none;white-space:nowrap}
 #board-forms .inline{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin-bottom:16px}
 .board{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;align-items:flex-start}
 .bcol{flex:1 0 210px;background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:10px;min-height:84px}
@@ -156,6 +157,9 @@ section.view.on{display:block}
 .bcard.done .btitle{color:#a79e92;text-decoration:line-through}
 .bnote{margin-top:4px;font-size:.8rem;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere}
 .bcard .st{display:inline-block;margin-top:7px;background:var(--bg2);color:var(--muted)}
+.bdate{display:inline-block;margin-top:6px;font-size:.72rem;font-weight:700;border-radius:999px;padding:2px 8px;background:var(--bg2);color:var(--muted)}
+.bdate.soon{background:var(--warn-soft);color:var(--warn)}
+.bdate.over{background:var(--bad-soft);color:var(--bad)}
 .bctl{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
 .bctl select{border:1px solid var(--line);border-radius:8px;padding:5px 7px;font:inherit;font-size:.78rem;background:#fff;color:var(--ink);min-width:0;flex:1}
 
@@ -592,12 +596,65 @@ function maybeBotsync() {
     .finally(() => { botSyncBusy = false; });
 }
 
+function isoDay(date) {
+  return date.getFullYear() + "-" + String(date.getMonth() + 1).padStart(2, "0") + "-" + String(date.getDate()).padStart(2, "0");
+}
+
+function todayISO() {
+  return isoDay(new Date());
+}
+
+function tomorrowISO() {
+  const date = new Date();
+  date.setDate(date.getDate() + 1);
+  return isoDay(date);
+}
+
+function dueTone(due) {
+  if (!due) return "";
+  const today = todayISO();
+  if (due < today) return "over";
+  if (due === today || due === tomorrowISO()) return "soon";
+  return "";
+}
+
+function dueLabel(due) {
+  return due.slice(8, 10) + "." + due.slice(5, 7);
+}
+
+function renderOverdue(cards) {
+  const actions = document.querySelector(".board-actions");
+  if (!actions) return;
+  const today = todayISO();
+  const count = cards.filter((c) => c.due && c.due < today).length;
+  let el = actions.querySelector(".overdue-count");
+  if (count > 0) {
+    if (!el) {
+      el = node("span", "overdue-count");
+      actions.appendChild(el);
+    }
+    el.textContent = "просрочено: " + count;
+  } else if (el) {
+    el.remove();
+  }
+}
+
 function renderBoard() {
   const board = $("#board");
   board.textContent = "";
   const cards = Array.isArray(store.board) ? store.board : [];
+  renderOverdue(cards);
   BOARD_COLS.forEach((col) => {
-    const colCards = cards.filter((c) => columnOf(c) === col.key);
+    const colCards = cards
+      .filter((c) => columnOf(c) === col.key)
+      .sort((a, b) => {
+        const aDue = a.due || "";
+        const bDue = b.due || "";
+        if (aDue && bDue) return aDue < bDue ? -1 : aDue > bDue ? 1 : 0;
+        if (aDue) return -1;
+        if (bDue) return 1;
+        return 0;
+      });
     const box = node("div", "bcol");
     box.dataset.col = col.key;
     const head = node("div", "bcolhead");
@@ -623,6 +680,12 @@ function boardCard(card) {
   }));
   top.appendChild(act);
   el.appendChild(top);
+
+  const due = card.due || "";
+  if (due) {
+    const tone = dueTone(due);
+    el.appendChild(node("span", "bdate" + (tone ? " " + tone : ""), "до " + dueLabel(due)));
+  }
 
   if (card.note) el.appendChild(node("div", "bnote", card.note));
   if (card.src) el.appendChild(node("span", "st", card.src === "bot" ? "крон" : "квесты"));
@@ -667,6 +730,7 @@ function openCardForm(card) {
     [
       { name: "title", label: "Название", value: card ? card.title : "", placeholder: "что сделать", maxlength: 300 },
       { name: "note", label: "Описание (необязательно)", type: "textarea", value: card ? card.note || "" : "", maxlength: 800 },
+      { name: "due", label: "Срок (необязательно)", type: "date", value: card ? card.due || "" : "" },
     ],
     {
       submit: card ? "Сохранить" : "Добавить",
@@ -677,8 +741,8 @@ function openCardForm(card) {
         openForms--;
         sendOps([
           card
-            ? { type: "board.edit", id: card.id, title: v.title, note: v.note }
-            : { type: "board.add", title: v.title, note: v.note },
+            ? { type: "board.edit", id: card.id, title: v.title, note: v.note, due: v.due }
+            : { type: "board.add", title: v.title, note: v.note, due: v.due },
         ]);
       },
     },

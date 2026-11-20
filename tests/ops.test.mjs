@@ -223,6 +223,38 @@ test("board.edit правит текст и описание", () => {
   assert.throws(() => applyOps(added, [{ type: "board.edit", id: "нет", title: "X" }]), ValidationError);
 });
 
+test("board: срок — валидная дата, мусор и правка", () => {
+  const added = applyOps(base(), [{ type: "board.add", title: "С датой", due: "2026-11-23" }]);
+  assert.equal(added.board.at(-1).due, "2026-11-23");
+
+  const leap = applyOps(base(), [{ type: "board.add", title: "Лип", due: "2024-02-29" }]);
+  assert.equal(leap.board.at(-1).due, "2024-02-29");
+
+  for (const bad of ["2026-13-40", "завтра", null, undefined, "2026-02-30", "2023-02-29", " 2026-01-01 ", 20261123]) {
+    const next = applyOps(base(), [{ type: "board.add", title: "Мусор", due: bad }]);
+    assert.equal(next.board.at(-1).due, "");
+  }
+
+  const plain = applyOps(base(), [{ type: "board.add", title: "Без срока" }]);
+  const id = plain.board[0].id;
+  assert.equal(plain.board[0].due, "");
+
+  const set = applyOps(plain, [{ type: "board.edit", id, title: "Без срока", due: "2026-12-31" }]);
+  assert.equal(set.board[0].due, "2026-12-31");
+
+  const changed = applyOps(set, [{ type: "board.edit", id, title: "Без срока", due: "2027-01-05" }]);
+  assert.equal(changed.board[0].due, "2027-01-05");
+
+  const removed = applyOps(changed, [{ type: "board.edit", id, title: "Без срока" }]);
+  assert.equal(removed.board[0].due, "");
+
+  const garbage = applyOps(set, [{ type: "board.edit", id, title: "Без срока", due: "завтра" }]);
+  assert.equal(garbage.board[0].due, "");
+
+  const legacy = normalizeState({ board: [{ id: "c1", title: "Старая карточка" }] });
+  assert.equal(legacy.board[0].due, "");
+});
+
 test("board.set: статус, исполнитель, doneAt", () => {
   const added = applyOps(base(), [{ type: "board.add", title: "Дело" }]);
   const id = added.board[0].id;
