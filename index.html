@@ -586,7 +586,7 @@ function maybeBotsync() {
   botSyncBusy = true;
   sendOps([{
     type: "board.botsync",
-    jobs: missing.map((j) => ({ ref: j.name, title: j.card, note: j.every })),
+    jobs: missing.map((j) => ({ ref: j.name, title: j.card, note: j.cardNote || j.every })),
   }])
     .then((okRes) => { if (okRes) botSyncDone = true; })
     .finally(() => { botSyncBusy = false; });
@@ -735,7 +735,7 @@ function openFromReminders() {
         if (!job) { toast("Напоминание не найдено"); return; }
         form.remove();
         openForms--;
-        sendOps([{ type: "board.add", title: job.card, note: job.every, src: "bot", ref: job.name }]);
+        sendOps([{ type: "board.add", title: job.card, note: job.cardNote || job.every, src: "bot", ref: job.name }]);
       },
     },
   );

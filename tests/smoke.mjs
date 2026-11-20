@@ -202,6 +202,8 @@ check(
   "чип «→ в бэклог» только у задач на доске",
   [...doc.querySelectorAll(".job")].filter((j) => [...j.querySelectorAll(".st")].some((s) => s.textContent === "→ в бэклог")).length === 2,
 );
+const earsCard = boardCard("Проверить уши кошке Кисе");
+check("у карточки ушей настоящее описание периодичности", !!earsCard && earsCard.textContent.includes("раз в 4 месяца") && !earsCard.textContent.includes("каждый день"));
 
 doc.getElementById("add-card").click();
 await settle(2);
